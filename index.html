@@ -4,220 +4,258 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privathinker Cloud Hub</title>
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
+    
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: #1e293b; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Scrollbar */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Animation Classes */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glassmorphism */
+        .glass-panel { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-50 h-screen overflow-hidden flex selection:bg-indigo-500/30">
 
-    <!-- LEFT COLUMN: Controls & Input (30%) -->
-    <div class="w-[30%] h-full flex flex-col border-r border-slate-800 bg-slate-900/50 relative z-10 shadow-2xl">
+    <!-- LEFT COLUMN: CONTROLS (30% / Fixed Width) -->
+    <aside class="w-[350px] md:w-[30%] lg:w-[25%] h-full flex flex-col border-r border-white/5 bg-slate-900/50 relative z-20 shadow-2xl">
         
-        <!-- Header -->
-        <div class="p-6 border-b border-slate-800 bg-slate-900">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg tracking-tight text-white">Privathinker</h1>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Cloud Hub v2.0</p>
-                </div>
+        <!-- 1. Header -->
+        <div class="p-6 border-b border-white/5 bg-slate-900 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight text-white leading-tight">Privathinker</h1>
+                <p class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">Cloud Hub v3.0</p>
             </div>
         </div>
 
-        <!-- Upload Zone -->
+        <!-- 2. Upload Area -->
         <div class="p-6 flex-none">
-            <div class="relative group h-48 w-full">
+            <div class="relative group w-full aspect-video">
                 <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
-                <div id="dropZone" class="absolute inset-0 border-2 border-dashed border-slate-700 bg-slate-800/30 rounded-xl flex flex-col items-center justify-center transition-all duration-300 group-hover:border-indigo-500 group-hover:bg-slate-800/80">
-                    <div id="uploadPlaceholder" class="text-center p-4">
-                        <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-3 border border-slate-700 group-hover:scale-110 transition-transform">
-                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        </div>
-                        <p class="text-sm font-medium text-slate-300">Drag & Drop Image</p>
-                        <p class="text-xs text-slate-500 mt-1">JPG, PNG (Max 20MB)</p>
+                <div id="dropZone" class="absolute inset-0 border-2 border-dashed border-slate-700 bg-slate-800/20 rounded-xl flex flex-col items-center justify-center transition-all duration-300 group-hover:border-indigo-500 group-hover:bg-slate-800/40">
+                    <div id="uploadPlaceholder" class="text-center p-4 transition-all duration-300">
+                        <svg class="w-8 h-8 text-slate-500 mx-auto mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <p class="text-xs font-medium text-slate-400 group-hover:text-slate-200">Drop Image Here</p>
                     </div>
-                    <img id="previewThumb" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl opacity-60" />
-                    <div id="fileInfo" class="hidden absolute bottom-2 left-0 right-0 px-4 py-2 bg-black/60 backdrop-blur-sm text-center">
-                        <p class="text-xs text-white truncate font-mono" id="fileName"></p>
+                    <img id="previewThumb" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl opacity-50 blur-sm scale-105" />
+                    <div id="fileLabel" class="hidden absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md rounded-xl p-2">
+                        <span id="fileName" class="text-xs text-white font-mono truncate max-w-full">filename.jpg</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Action Area -->
-        <div class="px-6 flex gap-3">
-            <button id="analyzeBtn" disabled class="flex-1 py-3 px-4 rounded-lg font-semibold text-sm bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                Analyze
+        <!-- 3. Actions -->
+        <div class="px-6 flex flex-col gap-3">
+            <button id="analyzeBtn" disabled class="w-full py-4 px-4 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 hover:bg-indigo-500 hover:shadow-indigo-500/30 hover:-translate-y-0.5 disabled:bg-slate-800 disabled:text-slate-600 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3">
+                <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span>Step 1: Analyze Image</span>
             </button>
-            <button id="saveBtn" disabled class="flex-1 py-3 px-4 rounded-lg font-semibold text-sm bg-emerald-600 text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                Save
-            </button>
-        </div>
-
-        <!-- Progress Log -->
-        <div class="flex-1 p-6 flex flex-col overflow-hidden">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">System Log</h3>
-                <div id="authStatus" class="w-2 h-2 rounded-full bg-slate-700" title="Auth Status"></div>
-            </div>
-            <div id="logContainer" class="flex-1 bg-slate-950 rounded-lg border border-slate-800 p-3 font-mono text-[10px] text-slate-400 overflow-y-auto scrollbar-thin space-y-1">
-                <div class="opacity-30 italic">Waiting for input...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- RIGHT COLUMN: Dashboard (70%) -->
-    <div class="w-[70%] h-full bg-slate-950 overflow-y-auto scrollbar-thin relative">
-        <div class="p-8 max-w-6xl mx-auto space-y-8">
             
-            <!-- Header -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold text-white tracking-tight">Live Results Dashboard</h2>
-                <div class="flex gap-2 text-xs text-slate-500 bg-slate-900 py-1 px-3 rounded-full border border-slate-800">
-                    <span id="statRatios">0 Ratios</span> • <span id="statTags">0 Tags</span>
-                </div>
-            </div>
+            <button id="saveBtn" disabled class="w-full py-4 px-4 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/30 hover:-translate-y-0.5 disabled:bg-slate-800 disabled:text-slate-600 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                <span>Step 2: Save to Drive</span>
+            </button>
+        </div>
 
-            <!-- Section 1: Visuals -->
-            <section>
-                <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <!-- 4. Log Console -->
+        <div class="flex-1 p-6 flex flex-col min-h-0">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Operations Log</h3>
+                <div id="authIndicator" class="w-2 h-2 rounded-full bg-slate-700" title="Auth Status"></div>
+            </div>
+            <div id="consoleLog" class="flex-1 bg-slate-950 rounded-lg border border-white/5 p-3 font-mono text-[10px] leading-relaxed text-slate-400 overflow-y-auto custom-scroll shadow-inner">
+                <div class="text-slate-600 italic">Waiting for input...</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- RIGHT COLUMN: RESULTS DASHBOARD (70% / Scrollable) -->
+    <main class="flex-1 h-full bg-slate-950 relative overflow-y-auto custom-scroll scroll-smooth">
+        
+        <!-- Top Bar -->
+        <div class="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-white/5 px-8 py-5 flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-white tracking-tight">Live Results Dashboard</h2>
+            <div class="flex gap-2">
+                <span id="badgeRatios" class="px-3 py-1 rounded-full bg-slate-900 border border-white/10 text-xs text-slate-400 font-mono">0 Ratios</span>
+                <span id="badgeTags" class="px-3 py-1 rounded-full bg-slate-900 border border-white/10 text-xs text-slate-400 font-mono">0 Tags</span>
+            </div>
+        </div>
+
+        <div class="p-8 max-w-7xl mx-auto space-y-10 pb-20">
+            
+            <!-- SECTION 1: VISUAL ASSETS (Horizontal Scroll) -->
+            <section id="sectionVisuals" class="space-y-4 opacity-50 transition-opacity duration-500">
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Generated Ratios
+                    Generated Resize Assets
                 </h3>
-                <div id="ratioGrid" class="grid grid-cols-6 gap-4">
-                    <!-- Placeholders -->
-                    <div class="aspect-[2/3] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">2:3</span></div>
-                    <div class="aspect-[3/4] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">3:4</span></div>
-                    <div class="aspect-[4/5] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">4:5</span></div>
-                    <div class="aspect-[1/1.4] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">ISO</span></div>
-                    <div class="aspect-[11/14] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">11:14</span></div>
-                    <div class="aspect-square bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">1:1</span></div>
-                </div>
-            </section>
-
-            <!-- Section 2: AI Content -->
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
                 
-                <!-- Titles Card -->
-                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 flex flex-col h-full">
-                    <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
-                        Optimized Titles
-                    </h3>
-                    <div id="titlesContainer" class="flex-1 space-y-3">
-                        <div class="h-8 bg-slate-800/50 rounded animate-pulse w-3/4"></div>
-                        <div class="h-8 bg-slate-800/50 rounded animate-pulse w-full"></div>
-                        <div class="h-8 bg-slate-800/50 rounded animate-pulse w-5/6"></div>
+                <!-- Scroll Container -->
+                <div class="relative group">
+                    <div id="ratioContainer" class="flex gap-4 overflow-x-auto pb-4 custom-scroll snap-x snap-mandatory">
+                        <!-- Placeholder items -->
+                        <div class="snap-start shrink-0 w-32 aspect-[2/3] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">2:3</div>
+                        <div class="snap-start shrink-0 w-32 aspect-[3/4] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">3:4</div>
+                        <div class="snap-start shrink-0 w-32 aspect-[4/5] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">4:5</div>
+                        <div class="snap-start shrink-0 w-32 aspect-[1/1.4] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">ISO</div>
+                        <div class="snap-start shrink-0 w-32 aspect-square bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">1:1</div>
                     </div>
+                    <!-- Fade cues -->
+                    <div class="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none"></div>
                 </div>
-
-                <!-- Tags Card -->
-                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 flex flex-col h-full">
-                    <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-                        Target Tags
-                    </h3>
-                    <div id="tagsContainer" class="flex flex-wrap gap-2 content-start">
-                        <span class="px-3 py-1 bg-slate-800 rounded-full text-xs text-slate-500 animate-pulse">waiting for ai...</span>
-                    </div>
-                </div>
-
-                <!-- Description Card (Full Width) -->
-                <div class="md:col-span-2 bg-slate-900 rounded-xl border border-slate-800 p-5">
-                    <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Listing Description
-                    </h3>
-                    <div id="descContainer" class="w-full h-64 bg-slate-950 rounded-lg p-4 text-sm text-slate-300 font-mono whitespace-pre-wrap overflow-y-auto border border-slate-800/50">
-                        <span class="text-slate-600 opacity-50">Description content will appear here after analysis...</span>
-                    </div>
-                </div>
-
             </section>
-        </div>
 
-        <!-- Overlay Loading State -->
-        <div id="loadingOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div class="text-center">
-                <div class="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <h3 class="text-xl font-bold text-white">Processing...</h3>
-                <p class="text-slate-400 text-sm mt-2" id="loadingText">Initializing AI models</p>
+            <!-- SECTION 2: SEO DATA -->
+            <section id="sectionSEO" class="space-y-4 opacity-50 transition-opacity duration-500">
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Gemini Optimization
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Card: Titles -->
+                    <div class="glass-panel rounded-xl p-5 flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-medium text-slate-400">SEO Titles</span>
+                            <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                        </div>
+                        <div id="titlesOutput" class="space-y-3 flex-1 font-mono text-xs text-slate-300">
+                            <div class="h-6 bg-slate-800 rounded animate-pulse w-3/4"></div>
+                            <div class="h-6 bg-slate-800 rounded animate-pulse w-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Card: Tags -->
+                    <div class="glass-panel rounded-xl p-5 flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-medium text-slate-400">Target Tags</span>
+                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        </div>
+                        <div id="tagsOutput" class="flex flex-wrap gap-2 content-start">
+                            <div class="h-6 w-16 bg-slate-800 rounded-full animate-pulse"></div>
+                            <div class="h-6 w-20 bg-slate-800 rounded-full animate-pulse"></div>
+                            <div class="h-6 w-12 bg-slate-800 rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+
+                    <!-- Card: Description (Full Width) -->
+                    <div class="md:col-span-2 glass-panel rounded-xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-medium text-slate-400">Product Description</span>
+                            <button id="copyDescBtn" class="text-[10px] text-indigo-400 hover:text-indigo-300 font-mono transition-colors">COPY TEXT</button>
+                        </div>
+                        <div id="descOutput" class="w-full min-h-[200px] bg-slate-900/50 rounded-lg p-4 font-mono text-xs text-slate-400 leading-relaxed whitespace-pre-wrap border border-white/5">
+                            Waiting for analysis...
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+        
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+            <div class="text-center transform transition-transform duration-300 translate-y-4">
+                <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h3 class="text-white font-bold text-lg">Processing...</h3>
+                <p id="loadingText" class="text-slate-400 text-xs font-mono mt-1">Initializing AI Models</p>
             </div>
         </div>
-    </div>
 
-    <!-- CONFIG & SCRIPTS -->
+    </main>
+
+    <!-- LOGIC SCRIPT -->
     <script>
-        // --- CONSTANTS & CONFIG ---
+        /**
+         * CONFIGURATION & STATE
+         */
         const CONFIG = {
             apiKey: "AIzaSyBy7e3wOwLR4CmCEarpaE9ZEO8oZvtork0",
             clientId: "594148516220-5u0inttseubu4i4gat5aa27b2t80rn3g.apps.googleusercontent.com",
             scopes: "https://www.googleapis.com/auth/drive.file",
             ratios: [
-                { name: '2-3_Ratio', ratio: 2/3, label: '2:3' },
-                { name: '3-4_Ratio', ratio: 3/4, label: '3:4' },
-                { name: '4-5_Ratio', ratio: 4/5, label: '4:5' },
-                { name: 'ISO', ratio: 1/1.414, label: 'ISO' },
-                { name: '11-14_Ratio', ratio: 11/14, label: '11:14' },
-                { name: 'Square', ratio: 1, label: '1:1' }
+                { name: '2-3_Ratio', ratio: 2/3, label: '2:3 Print' },
+                { name: '3-4_Ratio', ratio: 3/4, label: '3:4 Print' },
+                { name: '4-5_Ratio', ratio: 4/5, label: '4:5 Print' },
+                { name: 'ISO', ratio: 1/1.414, label: 'ISO A1-A5' },
+                { name: '11-14_Ratio', ratio: 11/14, label: '11x14 Print' },
+                { name: 'Square', ratio: 1, label: '1:1 Preview' }
             ]
         };
 
         const STATE = {
             file: null,
-            resizedBlobs: [], // { name, blob }
-            seoData: null,    // { titles, description, tags, fullText }
-            finalZip: null,
-            finalDoc: null,
+            blobs: [], // { name: string, blob: Blob }
+            seoContent: { titles: [], tags: [], description: "", fullText: "" },
+            zipBlob: null,
+            docBlob: null,
             tokenClient: null,
             accessToken: null
         };
 
-        // --- DOM ELEMENTS ---
-        const els = {
+        const DOM = {
             fileInput: document.getElementById('fileInput'),
             dropZone: document.getElementById('dropZone'),
             uploadPlaceholder: document.getElementById('uploadPlaceholder'),
             previewThumb: document.getElementById('previewThumb'),
+            fileLabel: document.getElementById('fileLabel'),
             fileName: document.getElementById('fileName'),
-            fileInfo: document.getElementById('fileInfo'),
             analyzeBtn: document.getElementById('analyzeBtn'),
             saveBtn: document.getElementById('saveBtn'),
-            logContainer: document.getElementById('logContainer'),
-            ratioGrid: document.getElementById('ratioGrid'),
-            titlesContainer: document.getElementById('titlesContainer'),
-            tagsContainer: document.getElementById('tagsContainer'),
-            descContainer: document.getElementById('descContainer'),
+            consoleLog: document.getElementById('consoleLog'),
+            sectionVisuals: document.getElementById('sectionVisuals'),
+            sectionSEO: document.getElementById('sectionSEO'),
+            ratioContainer: document.getElementById('ratioContainer'),
+            titlesOutput: document.getElementById('titlesOutput'),
+            tagsOutput: document.getElementById('tagsOutput'),
+            descOutput: document.getElementById('descOutput'),
             loadingOverlay: document.getElementById('loadingOverlay'),
             loadingText: document.getElementById('loadingText'),
-            statRatios: document.getElementById('statRatios'),
-            statTags: document.getElementById('statTags'),
-            authStatus: document.getElementById('authStatus')
+            badgeRatios: document.getElementById('badgeRatios'),
+            badgeTags: document.getElementById('badgeTags'),
+            authIndicator: document.getElementById('authIndicator')
         };
 
-        // --- INITIALIZATION ---
+        /**
+         * INITIALIZATION
+         */
         window.onload = () => {
-            log("System initialized.");
-            initGoogleIdentity();
+            log("System initialized v3.0");
+            initGIS();
         };
 
-        function initGoogleIdentity() {
+        function initGIS() {
             try {
                 STATE.tokenClient = google.accounts.oauth2.initTokenClient({
                     client_id: CONFIG.clientId,
@@ -228,151 +266,203 @@
                             return;
                         }
                         STATE.accessToken = resp.access_token;
-                        log("Authenticated with Google.", "success");
-                        els.authStatus.classList.remove('bg-slate-700', 'bg-red-500');
-                        els.authStatus.classList.add('bg-emerald-500', 'shadow-[0_0_8px_rgba(16,185,129,0.8)]');
-                        // Proceed to save if this was triggered during save flow
-                        performSave();
+                        log("Google Auth Success. Token acquired.", "success");
+                        DOM.authIndicator.classList.remove('bg-slate-700');
+                        DOM.authIndicator.classList.add('bg-emerald-500', 'shadow-[0_0_10px_rgba(16,185,129,0.5)]');
+                        
+                        // Continue save process if that was the trigger
+                        performDriveUpload();
                     },
                 });
                 log("Google Identity Service ready.");
             } catch (e) {
-                log("Failed to init GIS: " + e.message, "error");
+                log("Failed to init GIS. Check internet.", "error");
             }
         }
 
-        // --- EVENT LISTENERS ---
-        els.fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+        /**
+         * EVENT LISTENERS
+         */
+        DOM.fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
         
-        els.analyzeBtn.addEventListener('click', async () => {
-            if (!STATE.file) return;
-            setLoading(true, "Analyzing Image & Generating Content...");
+        // Drag and Drop Visuals
+        const dropEvents = ['dragenter', 'dragover', 'dragleave', 'drop'];
+        dropEvents.forEach(evt => DOM.dropZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }));
+        DOM.dropZone.addEventListener('dragenter', () => DOM.dropZone.classList.add('border-indigo-500', 'bg-slate-800/40'));
+        DOM.dropZone.addEventListener('dragleave', () => DOM.dropZone.classList.remove('border-indigo-500', 'bg-slate-800/40'));
+        DOM.dropZone.addEventListener('drop', (e) => {
+            DOM.dropZone.classList.remove('border-indigo-500', 'bg-slate-800/40');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+
+        DOM.analyzeBtn.addEventListener('click', runAnalysis);
+        DOM.saveBtn.addEventListener('click', initiateSave);
+        
+        document.getElementById('copyDescBtn').addEventListener('click', () => {
+            if(STATE.seoContent.description) {
+                navigator.clipboard.writeText(STATE.seoContent.description);
+                log("Description copied to clipboard");
+            }
+        });
+
+        /**
+         * CORE LOGIC: FILE & PREVIEW
+         */
+        function handleFileSelect(file) {
+            if (!file || !file.type.startsWith('image/')) return;
             
-            try {
-                // 1. Resize Images
-                log("Starting image processing...");
-                await processImages(STATE.file);
-                
-                // 2. Call AI
-                log("Querying Gemini Vision API...");
-                await generateAIContent(STATE.file);
-                
-                // 3. Prepare Files
-                log("Packaging assets (ZIP & Doc)...");
-                await prepareDownloads();
-                
-                // 4. Enable Save
-                els.saveBtn.disabled = false;
-                log("Analysis complete. Ready to save.", "success");
-                
-            } catch (error) {
-                log("Analysis Failed: " + error.message, "error");
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        els.saveBtn.addEventListener('click', () => {
-            if (!STATE.accessToken) {
-                log("Requesting Google Authentication...");
-                STATE.tokenClient.requestAccessToken({ prompt: '' });
-            } else {
-                performSave();
-            }
-        });
-
-        // --- CORE LOGIC: FILE HANDLING ---
-        function handleFile(file) {
-            if (!file) return;
             STATE.file = file;
             
             // UI Update
-            const url = URL.createObjectURL(file);
-            els.previewThumb.src = url;
-            els.previewThumb.classList.remove('hidden');
-            els.uploadPlaceholder.classList.add('hidden');
-            els.fileInfo.classList.remove('hidden');
-            els.fileName.textContent = file.name;
-            els.dropZone.classList.add('border-indigo-500', 'bg-slate-800/50');
+            DOM.previewThumb.src = URL.createObjectURL(file);
+            DOM.previewThumb.classList.remove('hidden');
+            DOM.fileLabel.classList.remove('hidden');
+            DOM.uploadPlaceholder.classList.add('hidden');
+            DOM.fileName.textContent = file.name;
             
-            els.analyzeBtn.disabled = false;
-            els.saveBtn.disabled = true; // Reset save flow
+            DOM.analyzeBtn.disabled = false;
+            DOM.saveBtn.disabled = true;
+            DOM.analyzeBtn.classList.remove('bg-slate-800');
+            DOM.analyzeBtn.classList.add('bg-indigo-600');
             
-            // Clear Dashboard
-            clearDashboard();
-            log(`File loaded: ${file.name}`);
+            // Reset Dashboard
+            DOM.sectionVisuals.classList.add('opacity-50');
+            DOM.sectionSEO.classList.add('opacity-50');
+            DOM.ratioContainer.innerHTML = '<div class="text-xs text-slate-600 p-4">Ready to analyze...</div>';
+            DOM.titlesOutput.innerHTML = '';
+            DOM.tagsOutput.innerHTML = '';
+            DOM.descOutput.textContent = 'Waiting for analysis...';
+            DOM.badgeRatios.textContent = "0 Ratios";
+            DOM.badgeTags.textContent = "0 Tags";
+            
+            log(`File loaded: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`);
         }
 
-        // --- CORE LOGIC: STEP 1 - ANALYZE ---
-        async function processImages(file) {
-            STATE.resizedBlobs = [];
-            els.ratioGrid.innerHTML = ''; // Clear grid
+        /**
+         * STEP 1: ANALYSIS (LOCAL + AI)
+         */
+        async function runAnalysis() {
+            if (!STATE.file) return;
+            
+            toggleLoading(true, "Generating Visual Assets...");
+            log("--- Starting Analysis Phase ---");
+            
+            try {
+                // 1. Image Resizing (Local)
+                await generateResizedImages(STATE.file);
+                DOM.sectionVisuals.classList.remove('opacity-50');
+                
+                // 2. Gemini Analysis (Cloud)
+                toggleLoading(true, "Consulting Gemini AI...");
+                await generateSEOContent(STATE.file);
+                DOM.sectionSEO.classList.remove('opacity-50');
+                
+                // 3. Prepare Blobs for Save
+                toggleLoading(true, "Packaging Files...");
+                await createZipPackage();
+                STATE.docBlob = new Blob([STATE.seoContent.fullText], {type: 'application/msword'});
+                
+                // 4. Enable Save
+                DOM.saveBtn.disabled = false;
+                DOM.saveBtn.innerHTML = `
+                    <svg class="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    <span>Step 2: Save to Drive</span>
+                `;
+                
+                log("Analysis Complete. Ready to Save.", "success");
+                
+            } catch (err) {
+                console.error(err);
+                log("Analysis Failed: " + err.message, "error");
+                alert("Error during analysis. See log.");
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        async function generateResizedImages(file) {
+            STATE.blobs = [];
+            DOM.ratioContainer.innerHTML = '';
             
             const bitmap = await createImageBitmap(file);
             const { width: srcW, height: srcH } = bitmap;
-
+            
             for (const r of CONFIG.ratios) {
-                // Calculate dimensions (Cover fit)
+                // Calculate dimensions (Cover fit logic)
                 let tgtW = srcW, tgtH = srcH;
                 if (srcW / srcH > r.ratio) {
-                    tgtW = srcH * r.ratio;
+                    tgtW = srcH * r.ratio; // Limited by height
                 } else {
-                    tgtH = srcW / r.ratio;
+                    tgtH = srcW / r.ratio; // Limited by width
                 }
-
+                
                 const canvas = document.createElement('canvas');
                 canvas.width = tgtW;
                 canvas.height = tgtH;
                 const ctx = canvas.getContext('2d');
                 
-                // Center Crop
+                // Center crop
                 const ox = (srcW - tgtW) / 2;
                 const oy = (srcH - tgtH) / 2;
                 
                 ctx.drawImage(bitmap, ox, oy, tgtW, tgtH, 0, 0, tgtW, tgtH);
                 
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-                STATE.resizedBlobs.push({ name: `${r.name}.jpg`, blob });
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+                STATE.blobs.push({ name: `${r.name}.jpg`, blob });
                 
                 // Render Thumbnail
-                renderThumbnail(canvas.toDataURL(), r.label);
+                const thumbDiv = document.createElement('div');
+                thumbDiv.className = "snap-start shrink-0 h-40 bg-slate-800 rounded-lg border border-white/10 overflow-hidden relative group fade-in";
+                thumbDiv.style.aspectRatio = `${r.ratio}`; // maintain aspect ratio in CSS
+                
+                thumbDiv.innerHTML = `
+                    <img src="${URL.createObjectURL(blob)}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span class="text-[10px] text-white font-mono bg-black/70 px-2 py-1 rounded">${r.label}</span>
+                    </div>
+                    <div class="absolute bottom-0 inset-x-0 bg-slate-900/80 text-[10px] text-center text-slate-400 py-1 font-mono border-t border-white/10">
+                        ${Math.round(tgtW)}x${Math.round(tgtH)}
+                    </div>
+                `;
+                DOM.ratioContainer.appendChild(thumbDiv);
             }
-            els.statRatios.textContent = `${CONFIG.ratios.length} Ratios`;
+            DOM.badgeRatios.textContent = `${STATE.blobs.length} Assets`;
+            log(`Generated ${STATE.blobs.length} image variations.`);
         }
 
-        async function generateAIContent(file) {
-            // Downscale for API
+        async function generateSEOContent(file) {
+            // Downscale for API to save bandwidth
             const bitmap = await createImageBitmap(file);
             const scale = 800 / Math.max(bitmap.width, bitmap.height);
             const canvas = document.createElement('canvas');
             canvas.width = bitmap.width * scale;
             canvas.height = bitmap.height * scale;
             canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-            const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
 
-            const prompt = `Analyze the uploaded product image and generate a complete Etsy Listing Package: Titles, Description, and Tags.
+            const prompt = `Analyze this product image for Etsy.
+Store Name: Privathinker
 
-Store: Privathinker
+STATIC INFO:
+- Sizes: 2:3, 3:4, 4:5, ISO, 11x14
+- Contact: 'Message us for custom sizes'
 
-Static Assets:
-- Size Guide:
-• 2:3 Ratio file for printing: 6x9, 8x12, 10x15, 12x18, 24x36 inches (10x15, 20x30, 30x45, 60x90 cm)
-• 3:4 Ratio file for printing: 6x8, 9x12, 12x16, 18x24 inches (15x20, 30x40, 45x60 cm)
-• 4:5 Ratio file for printing: 8x10, 16x20, 24x30 inches (20x25, 40x50 cm)
-• ISO (International Paper Size): A5, A4, A3, A2, A1 (50x70 cm)
-• 11x14 Ratio file for printing: 11x14 inches (22x28 cm)
-- Contact Note: 'Need a custom size? Message us!'
+INSTRUCTIONS:
+Provide the output in Markdown with these EXACT headers as separators:
+### TITLES
+(List 5 SEO optimized titles, one per line)
+### DESCRIPTION
+(A persuasive description including: Hook -> Digital Warning -> Size List -> Printing Tips -> CTA)
+### TAGS
+(13 comma separated keywords)
 
-STEPS:
-1. VISUAL SUMMARY (1 sentence)
-2. TITLES: 5 SEO Titles. Leave a blank line between each.
-3. DESCRIPTION: Hook -> Warning (Digital Product) -> Sizes -> Printing Tips -> CTA.
-4. TAGS: 13 comma-separated keywords.
+Do not add bold formatting (**). Keep it clean text.`;
 
-FORMAT: Markdown. Return exactly these headers: TITLES, DESCRIPTION, TAGS.`;
-
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.apiKey}`, {
+            log("Sending request to Gemini 2.5 Flash...");
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -385,107 +475,120 @@ FORMAT: Markdown. Return exactly these headers: TITLES, DESCRIPTION, TAGS.`;
                 })
             });
 
-            if (!response.ok) throw new Error("Gemini API Error: " + response.status);
-            const data = await response.json();
+            if (!res.ok) throw new Error(`Gemini API ${res.status}`);
+            const data = await res.json();
             const text = data.candidates[0].content.parts[0].text;
             
+            STATE.seoContent.fullText = text;
             parseAndRenderSEO(text);
         }
 
         function parseAndRenderSEO(text) {
-            STATE.seoData = { fullText: text, titles: [], description: "", tags: [] };
-            
-            // Simple Parsing Strategy
-            const cleanText = text.replace(/\*\*/g, ''); // Remove bold markers for cleaner parsing
-            
-            // Extract via simple splitting or regex
-            // Note: The prompt asks for 1. VISUAL..., 2. TITLES, 3. DESCRIPTION, 4. TAGS
-            
-            const titlesMatch = cleanText.match(/TITLES:?([\s\S]*?)(?:3\.|DESCRIPTION)/i);
-            const descMatch = cleanText.match(/DESCRIPTION:?([\s\S]*?)(?:4\.|TAGS)/i);
-            const tagsMatch = cleanText.match(/TAGS:?([\s\S]*)/i);
+            // Regex parsing based on headers
+            const titlesMatch = text.match(/### TITLES\s*([\s\S]*?)(?=### DESCRIPTION|$)/i);
+            const descMatch = text.match(/### DESCRIPTION\s*([\s\S]*?)(?=### TAGS|$)/i);
+            const tagsMatch = text.match(/### TAGS\s*([\s\S]*?)$/i);
 
             // Render Titles
-            els.titlesContainer.innerHTML = '';
+            DOM.titlesOutput.innerHTML = '';
             if (titlesMatch) {
-                const lines = titlesMatch[1].trim().split('\n').filter(l => l.trim().length > 3);
-                STATE.seoData.titles = lines;
+                const lines = titlesMatch[1].trim().split('\n').filter(l => l.trim().length > 0);
+                STATE.seoContent.titles = lines;
                 lines.forEach(t => {
                     const div = document.createElement('div');
-                    div.className = "bg-slate-800/50 p-3 rounded text-sm text-slate-300 border border-slate-700/50 animate-fade-in";
-                    div.textContent = t.replace(/^\d+\.\s*/, '').replace(/^- /, '');
-                    els.titlesContainer.appendChild(div);
+                    div.className = "bg-slate-800/50 p-2 rounded text-xs text-slate-300 border border-white/5 font-mono hover:bg-slate-800 transition-colors cursor-default";
+                    div.textContent = t.replace(/^\d+\.\s*/, '').replace(/^-\s*/, '');
+                    DOM.titlesOutput.appendChild(div);
                 });
-            }
-
-            // Render Description
-            if (descMatch) {
-                STATE.seoData.description = descMatch[1].trim();
-                els.descContainer.textContent = STATE.seoData.description;
             }
 
             // Render Tags
-            els.tagsContainer.innerHTML = '';
+            DOM.tagsOutput.innerHTML = '';
             if (tagsMatch) {
-                const rawTags = tagsMatch[1].split(/,|\n/).map(t => t.trim()).filter(t => t.length > 2);
-                STATE.seoData.tags = rawTags;
-                els.statTags.textContent = `${rawTags.length} Tags`;
-                rawTags.forEach(t => {
+                const raw = tagsMatch[1].trim();
+                const tags = raw.split(/,|\n/).map(t => t.trim()).filter(t => t.length > 0);
+                STATE.seoContent.tags = tags;
+                DOM.badgeTags.textContent = `${tags.length} Tags`;
+                tags.forEach(t => {
                     const span = document.createElement('span');
-                    span.className = "px-3 py-1 bg-indigo-900/30 text-indigo-300 border border-indigo-500/30 rounded-full text-xs animate-fade-in";
+                    span.className = "px-3 py-1 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded-full text-[10px] font-medium tracking-wide";
                     span.textContent = t;
-                    els.tagsContainer.appendChild(span);
+                    DOM.tagsOutput.appendChild(span);
                 });
             }
+
+            // Render Desc
+            if (descMatch) {
+                STATE.seoContent.description = descMatch[1].trim();
+                DOM.descOutput.textContent = STATE.seoContent.description;
+            }
+            
+            log("SEO Content parsed and rendered.");
         }
 
-        async function prepareDownloads() {
-            // ZIP
+        async function createZipPackage() {
             const zip = new JSZip();
-            const imgFolder = zip.folder("Resized_Images");
-            STATE.resizedBlobs.forEach(item => imgFolder.file(item.name, item.blob));
-            STATE.finalZip = await zip.generateAsync({ type: "blob" });
+            const folder = zip.folder("Privathinker_Assets");
+            
+            STATE.blobs.forEach(b => folder.file(b.name, b.blob));
+            
+            // Add SEO text file too for convenience
+            if (STATE.seoContent.fullText) {
+                folder.file("Listing_Info.txt", STATE.seoContent.fullText);
+            }
+            
+            STATE.zipBlob = await zip.generateAsync({type: "blob"});
+            log(`ZIP Package created: ${(STATE.zipBlob.size/1024/1024).toFixed(2)} MB`);
+        }
 
-            // Doc
-            if (STATE.seoData && STATE.seoData.fullText) {
-                STATE.finalDoc = new Blob([STATE.seoData.fullText], { type: 'application/msword' });
+        /**
+         * STEP 2: DRIVE SAVE
+         */
+        function initiateSave() {
+            if (!STATE.accessToken) {
+                log("Authentication required. Check popup...");
+                STATE.tokenClient.requestAccessToken({prompt: ''});
+            } else {
+                performDriveUpload();
             }
         }
 
-        // --- CORE LOGIC: STEP 2 - SAVE ---
-        async function performSave() {
-            setLoading(true, "Creating Folder & Uploading...");
+        async function performDriveUpload() {
+            toggleLoading(true, "Creating Folder & Uploading...");
+            log("--- Starting Cloud Upload ---");
+
             try {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const folderName = `Privathinker - ${timestamp}`;
-                
                 // 1. Create Folder
-                log(`Creating Folder: ${folderName}`);
-                const folderId = await createDriveFolder(folderName);
+                const folderName = `Privathinker - ${new Date().toISOString().slice(0,19).replace('T', ' ')}`;
+                const folderId = await createFolder(folderName);
+                log(`Created Drive Folder: ${folderName}`);
+
+                // 2. Upload ZIP
+                await uploadToDrive(STATE.zipBlob, "Privathinker_Assets.zip", folderId, "application/zip");
+                log("Uploaded Image Assets ZIP");
+
+                // 3. Upload Doc
+                await uploadToDrive(STATE.docBlob, "SEO_Listing.doc", folderId, "application/msword");
+                log("Uploaded SEO Document");
+
+                log("Process Complete! All files saved.", "success");
+                alert("Success! Files uploaded to Google Drive.");
+                DOM.saveBtn.textContent = "Saved Successfully ✅";
+                DOM.saveBtn.classList.replace('bg-emerald-600', 'bg-slate-700');
                 
-                // 2. Upload Files
-                log("Uploading ZIP archive...");
-                await uploadFile(STATE.finalZip, 'Resized_Images.zip', folderId, 'application/zip');
-                
-                log("Uploading SEO Document...");
-                await uploadFile(STATE.finalDoc, 'Listing_SEO.doc', folderId, 'application/msword');
-                
-                log("Cloud Save Complete!", "success");
-                alert("Files successfully saved to Google Drive!");
-                
-            } catch (error) {
-                log("Save Failed: " + error.message, "error");
-                if (error.status === 401 || error.message.includes("401")) {
-                     log("Auth token expired. Try clicking Save again.", "error");
-                     STATE.accessToken = null; // Reset
+            } catch (err) {
+                log("Upload Failed: " + err.message, "error");
+                if (err.status === 401) {
+                    log("Token expired. Retrying auth...", "error");
+                    STATE.accessToken = null;
                 }
             } finally {
-                setLoading(false);
+                toggleLoading(false);
             }
         }
 
-        // --- GOOGLE DRIVE API UTILS ---
-        async function createDriveFolder(name) {
+        // --- Drive API Helpers (Raw Fetch) ---
+        async function createFolder(name) {
             const res = await fetch('https://www.googleapis.com/drive/v3/files', {
                 method: 'POST',
                 headers: {
@@ -497,16 +600,13 @@ FORMAT: Markdown. Return exactly these headers: TITLES, DESCRIPTION, TAGS.`;
                     mimeType: 'application/vnd.google-apps.folder'
                 })
             });
-            if (!res.ok) throw new Error("Folder creation failed");
+            if (!res.ok) throw { status: res.status, message: 'Folder creation failed' };
             const data = await res.json();
             return data.id;
         }
 
-        async function uploadFile(blob, name, folderId, mimeType) {
-            // Metadata part
+        async function uploadToDrive(blob, name, folderId, mimeType) {
             const metadata = { name: name, parents: [folderId] };
-            
-            // Multipart body construction
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
             form.append('file', blob);
@@ -516,58 +616,37 @@ FORMAT: Markdown. Return exactly these headers: TITLES, DESCRIPTION, TAGS.`;
                 headers: { 'Authorization': `Bearer ${STATE.accessToken}` },
                 body: form
             });
-            
-            if (!res.ok) throw new Error("Upload failed for " + name);
+            if (!res.ok) throw { status: res.status, message: `Upload failed for ${name}` };
         }
 
-        // --- UI HELPERS ---
-        function renderThumbnail(src, label) {
-            const div = document.createElement('div');
-            div.className = "relative rounded-lg overflow-hidden border border-slate-700 aspect-square group animate-fade-in bg-slate-900";
-            div.innerHTML = `
-                <img src="${src}" class="w-full h-full object-contain p-2" />
-                <div class="absolute bottom-0 inset-x-0 bg-slate-900/80 text-center py-1 text-[10px] text-slate-300 font-mono border-t border-slate-800">
-                    ${label}
-                </div>
-            `;
-            els.ratioGrid.appendChild(div);
-        }
-
-        function clearDashboard() {
-            els.ratioGrid.innerHTML = `<div class="col-span-6 text-center text-slate-600 py-12 italic">Analysis pending...</div>`;
-            els.titlesContainer.innerHTML = '<div class="text-slate-600 text-xs">Pending analysis...</div>';
-            els.tagsContainer.innerHTML = '<span class="text-slate-600 text-xs">Pending...</span>';
-            els.descContainer.innerHTML = '<span class="text-slate-600 opacity-50">Content will appear here...</span>';
-            els.statRatios.textContent = "0 Ratios";
-            els.statTags.textContent = "0 Tags";
-        }
-
+        /**
+         * UTILS
+         */
         function log(msg, type="info") {
             const div = document.createElement('div');
-            const time = new Date().toLocaleTimeString([], { hour12: false });
-            let color = "text-slate-400";
-            if (type === "error") color = "text-red-400";
-            if (type === "success") color = "text-emerald-400";
+            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit'});
             
-            div.innerHTML = `<span class="opacity-50 mr-2">[${time}]</span> <span class="${color}">${msg}</span>`;
+            let colorClass = "text-slate-400";
+            if (type === "success") colorClass = "text-emerald-400";
+            if (type === "error") colorClass = "text-red-400 font-bold";
+
+            div.innerHTML = `<span class="opacity-30 mr-2">[${time}]</span><span class="${colorClass}">${msg}</span>`;
             
-            // Clean initial state
-            if (els.logContainer.children[0]?.textContent.includes("Waiting")) {
-                els.logContainer.innerHTML = '';
-            }
-            
-            els.logContainer.appendChild(div);
-            els.logContainer.scrollTop = els.logContainer.scrollHeight;
+            DOM.consoleLog.appendChild(div);
+            DOM.consoleLog.scrollTop = DOM.consoleLog.scrollHeight;
         }
 
-        function setLoading(isLoading, text) {
-            if (isLoading) {
-                els.loadingOverlay.classList.remove('hidden');
-                els.loadingText.textContent = text;
+        function toggleLoading(show, text) {
+            DOM.loadingText.textContent = text || "Processing...";
+            if (show) {
+                DOM.loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                DOM.loadingOverlay.querySelector('div').classList.remove('translate-y-4');
             } else {
-                els.loadingOverlay.classList.add('hidden');
+                DOM.loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+                DOM.loadingOverlay.querySelector('div').classList.add('translate-y-4');
             }
         }
+
     </script>
 </body>
 </html>
