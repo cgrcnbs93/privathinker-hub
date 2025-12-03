@@ -363,12 +363,12 @@ You MUST use these exact markdown headers for the parser to work:
                     renderUI();
                     updateProgress(completed, queue.length, `Analyzing: ${item.file.name}`);
 
-                    // 1. Resizer
+                    // 1. Resizer (High Res for Download)
                     log(`Generating ratios for ${item.file.name}...`);
                     item.thumbs = await generateRatios(item.file);
 
-                    // 2. AI
-                    log(`Sending to Gemini...`);
+                    // 2. AI (Turbo Low Res for Speed)
+                    log(`Sending to Gemini (Turbo Mode)...`);
                     item.seo = await callGemini(item.file);
                     
                     // 3. Doc Blob
@@ -563,12 +563,14 @@ You MUST use these exact markdown headers for the parser to work:
 
         async function callGemini(file) {
             const bitmap = await createImageBitmap(file);
-            const scale = 800 / Math.max(bitmap.width, bitmap.height);
+            // OPTIMIZATION: Aggressive Downscaling for AI Speed
+            // Max dimension 512px, Quality 0.5 for super fast upload
+            const scale = 512 / Math.max(bitmap.width, bitmap.height);
             const cvs = document.createElement('canvas');
-            cvs.width = bitmap.width * scale;
-            cvs.height = bitmap.height * scale;
+            cvs.width = Math.floor(bitmap.width * scale);
+            cvs.height = Math.floor(bitmap.height * scale);
             cvs.getContext('2d').drawImage(bitmap, 0, 0, cvs.width, cvs.height);
-            const base64 = cvs.toDataURL('image/jpeg', 0.7).split(',')[1];
+            const base64 = cvs.toDataURL('image/jpeg', 0.5).split(',')[1];
 
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.apiKey}`, {
                 method: 'POST',
