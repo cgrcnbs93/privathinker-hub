@@ -3,609 +3,500 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privathinker Cloud Hub</title>
+    <title>Privathinker Batch Factory + Extras</title>
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
     
-    <!-- Fonts & Icons -->
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
-    <!-- Custom Styles -->
+    <!-- Styles -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         
         /* Custom Scrollbar */
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #0f172a; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-        /* Animation Classes */
-        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
-        
-        @keyframes fadeIn {
-            to { opacity: 1; transform: translateY(0); }
+        /* No Blur - Crisp Edges */
+        img, canvas { 
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            filter: none !important;
         }
 
-        /* Glassmorphism */
-        .glass-panel { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-enter { animation: slideIn 0.3s ease-out forwards; }
+
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.4); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        
+        .loader {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-50 h-screen overflow-hidden flex selection:bg-indigo-500/30">
 
-    <!-- LEFT COLUMN: CONTROLS (30% / Fixed Width) -->
-    <aside class="w-[350px] md:w-[30%] lg:w-[25%] h-full flex flex-col border-r border-white/5 bg-slate-900/50 relative z-20 shadow-2xl">
+    <!-- SIDEBAR CONTROLS -->
+    <aside class="w-[360px] shrink-0 h-full flex flex-col border-r border-white/5 bg-slate-900/50 relative z-20 shadow-2xl">
         
-        <!-- 1. Header -->
+        <!-- Header -->
         <div class="p-6 border-b border-white/5 bg-slate-900 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
             </div>
             <div>
                 <h1 class="font-bold text-lg tracking-tight text-white leading-tight">Privathinker</h1>
-                <p class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">Cloud Hub v3.0</p>
+                <p class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">Batch Factory + Extras</p>
             </div>
         </div>
 
-        <!-- 2. Upload Area -->
-        <div class="p-6 flex-none">
-            <div class="relative group w-full aspect-video">
-                <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
-                <div id="dropZone" class="absolute inset-0 border-2 border-dashed border-slate-700 bg-slate-800/20 rounded-xl flex flex-col items-center justify-center transition-all duration-300 group-hover:border-indigo-500 group-hover:bg-slate-800/40">
-                    <div id="uploadPlaceholder" class="text-center p-4 transition-all duration-300">
-                        <svg class="w-8 h-8 text-slate-500 mx-auto mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        <p class="text-xs font-medium text-slate-400 group-hover:text-slate-200">Drop Image Here</p>
-                    </div>
-                    <img id="previewThumb" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl opacity-50 blur-sm scale-105" />
-                    <div id="fileLabel" class="hidden absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md rounded-xl p-2">
-                        <span id="fileName" class="text-xs text-white font-mono truncate max-w-full">filename.jpg</span>
+        <!-- Progress Bar -->
+        <div id="progressContainer" class="px-6 py-4 border-b border-white/5 bg-slate-900/30 hidden">
+            <div class="flex justify-between text-[10px] text-slate-400 font-mono mb-2">
+                <span id="progressLabel">Initializing...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all duration-300 w-0"></div>
+            </div>
+        </div>
+
+        <!-- Scrollable Inputs Area -->
+        <div class="flex-1 overflow-y-auto custom-scroll">
+            
+            <!-- SECTION 1: PRODUCT IMAGES -->
+            <div class="p-5 border-b border-white/5">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">1. Product Images</h3>
+                    <button id="clearProductsBtn" class="text-[9px] text-red-400 hover:text-red-300 hidden">Clear</button>
+                </div>
+                
+                <div class="relative group w-full aspect-[2/1]">
+                    <input type="file" id="productInput" accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                    <div id="productDropZone" class="absolute inset-0 border-2 border-dashed border-slate-700 bg-slate-800/20 rounded-xl flex flex-col items-center justify-center transition-all duration-300 group-hover:border-indigo-500 group-hover:bg-slate-800/40">
+                        <svg class="w-6 h-6 text-slate-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-[10px] font-bold text-slate-300">Upload Art</p>
+                        <p class="text-[9px] text-slate-500">Auto-Resize & SEO</p>
                     </div>
                 </div>
+                <div id="productCount" class="mt-2 text-[10px] font-mono text-slate-500">0 images selected</div>
             </div>
-        </div>
 
-        <!-- 3. Actions -->
-        <div class="px-6 flex flex-col gap-3">
-            <button id="analyzeBtn" disabled class="w-full py-4 px-4 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 hover:bg-indigo-500 hover:shadow-indigo-500/30 hover:-translate-y-0.5 disabled:bg-slate-800 disabled:text-slate-600 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3">
-                <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                <span>Step 1: Analyze Image</span>
-            </button>
-            
-            <button id="saveBtn" disabled class="w-full py-4 px-4 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/30 hover:-translate-y-0.5 disabled:bg-slate-800 disabled:text-slate-600 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                <span>Step 2: Save to Drive</span>
-            </button>
-        </div>
+            <!-- SECTION 2: GLOBAL EXTRAS -->
+            <div class="p-5 border-b border-white/5 bg-slate-900/20">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-[10px] font-bold text-emerald-500/80 uppercase tracking-widest flex items-center gap-2">
+                        <span>2. Global Extras</span>
+                        <span class="bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded text-[8px]">BONUS</span>
+                    </h3>
+                    <button id="clearBonusBtn" class="text-[9px] text-red-400 hover:text-red-300 hidden">Clear</button>
+                </div>
 
-        <!-- 4. Log Console -->
-        <div class="flex-1 p-6 flex flex-col min-h-0">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Operations Log</h3>
-                <div id="authIndicator" class="w-2 h-2 rounded-full bg-slate-700" title="Auth Status"></div>
+                <div class="relative group w-full h-24">
+                    <input type="file" id="bonusInput" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                    <div id="bonusDropZone" class="absolute inset-0 border-2 border-dashed border-emerald-900/50 bg-emerald-900/10 rounded-xl flex flex-col items-center justify-center transition-all duration-300 group-hover:border-emerald-500 group-hover:bg-emerald-900/20">
+                        <svg class="w-5 h-5 text-emerald-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <p class="text-[10px] font-bold text-emerald-400">PDFs / Guides</p>
+                        <p class="text-[9px] text-emerald-600/60">Added to every folder</p>
+                    </div>
+                </div>
+                <ul id="bonusList" class="mt-2 space-y-1">
+                    <li class="text-[10px] font-mono text-slate-500 italic">No extras selected</li>
+                </ul>
             </div>
-            <div id="consoleLog" class="flex-1 bg-slate-950 rounded-lg border border-white/5 p-3 font-mono text-[10px] leading-relaxed text-slate-400 overflow-y-auto custom-scroll shadow-inner">
-                <div class="text-slate-600 italic">Waiting for input...</div>
+
+            <!-- BUTTONS -->
+            <div class="p-5 flex flex-col gap-3">
+                <button id="analyzeBtn" disabled class="group w-full py-3.5 px-4 rounded-lg font-bold text-xs bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:shadow-none disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                    <span class="group-disabled:hidden text-lg">✨</span>
+                    <span id="analyzeBtnText">Start Processing</span>
+                </button>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="downloadBtn" disabled class="py-3 px-3 rounded-lg font-bold text-[10px] bg-slate-700 text-white hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-700 disabled:cursor-not-allowed transition-all flex flex-col items-center justify-center gap-1">
+                        <span class="text-lg opacity-80">⬇️</span>
+                        <span>Download All</span>
+                    </button>
+
+                    <button id="saveBtn" disabled class="py-3 px-3 rounded-lg font-bold text-[10px] bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-700 disabled:shadow-none disabled:cursor-not-allowed transition-all flex flex-col items-center justify-center gap-1">
+                        <span class="text-lg opacity-80">💾</span>
+                        <span>Save to Drive</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- LOGS -->
+            <div class="p-5 flex-col flex">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Logs</h3>
+                    <div id="authIndicator" class="flex items-center gap-1.5">
+                        <div class="w-1.5 h-1.5 rounded-full bg-slate-600" id="authDot"></div>
+                        <span class="text-[9px] font-mono text-slate-600" id="authText">Guest</span>
+                    </div>
+                </div>
+                <div id="consoleLog" class="h-32 bg-black/40 rounded-lg border border-white/5 p-3 font-mono text-[10px] leading-relaxed text-slate-400 overflow-y-auto custom-scroll shadow-inner">
+                    <div class="text-slate-600 italic">System ready...</div>
+                </div>
             </div>
         </div>
     </aside>
 
-    <!-- RIGHT COLUMN: RESULTS DASHBOARD (70% / Scrollable) -->
-    <main class="flex-1 h-full bg-slate-950 relative overflow-y-auto custom-scroll scroll-smooth">
-        
-        <!-- Top Bar -->
-        <div class="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-white/5 px-8 py-5 flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-white tracking-tight">Live Results Dashboard</h2>
-            <div class="flex gap-2">
-                <span id="badgeRatios" class="px-3 py-1 rounded-full bg-slate-900 border border-white/10 text-xs text-slate-400 font-mono">0 Ratios</span>
-                <span id="badgeTags" class="px-3 py-1 rounded-full bg-slate-900 border border-white/10 text-xs text-slate-400 font-mono">0 Tags</span>
-            </div>
-        </div>
-
-        <div class="p-8 max-w-7xl mx-auto space-y-10 pb-20">
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 h-full bg-slate-950 relative overflow-y-auto custom-scroll scroll-smooth p-8">
+        <div class="max-w-6xl mx-auto">
             
-            <!-- SECTION 1: VISUAL ASSETS (Horizontal Scroll) -->
-            <section id="sectionVisuals" class="space-y-4 opacity-50 transition-opacity duration-500">
-                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Generated Resize Assets
-                </h3>
-                
-                <!-- Scroll Container -->
-                <div class="relative group">
-                    <div id="ratioContainer" class="flex gap-4 overflow-x-auto pb-4 custom-scroll snap-x snap-mandatory">
-                        <!-- Placeholder items -->
-                        <div class="snap-start shrink-0 w-32 aspect-[2/3] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">2:3</div>
-                        <div class="snap-start shrink-0 w-32 aspect-[3/4] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">3:4</div>
-                        <div class="snap-start shrink-0 w-32 aspect-[4/5] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">4:5</div>
-                        <div class="snap-start shrink-0 w-32 aspect-[1/1.4] bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">ISO</div>
-                        <div class="snap-start shrink-0 w-32 aspect-square bg-slate-900 rounded-lg border border-white/5 flex items-center justify-center text-xs text-slate-700">1:1</div>
-                    </div>
-                    <!-- Fade cues -->
-                    <div class="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none"></div>
+            <!-- Empty State -->
+            <div id="emptyState" class="flex flex-col items-center justify-center h-[70vh] text-slate-600 select-none">
+                <div class="w-32 h-32 rounded-full bg-slate-900 flex items-center justify-center mb-6 border border-slate-800 shadow-2xl">
+                    <svg class="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
-            </section>
+                <h2 class="text-2xl font-light text-slate-500 mb-2">Batch Factory + Extras</h2>
+                <p class="text-sm font-mono opacity-50">Upload Art -> Resize -> AI -> Sync to Drive with Bonus Files</p>
+            </div>
 
-            <!-- SECTION 2: SEO DATA -->
-            <section id="sectionSEO" class="space-y-4 opacity-50 transition-opacity duration-500">
-                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Gemini Optimization
-                </h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    <!-- Card: Titles -->
-                    <div class="glass-panel rounded-xl p-5 flex flex-col h-full">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-medium text-slate-400">SEO Titles</span>
-                            <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-                        </div>
-                        <div id="titlesOutput" class="space-y-3 flex-1 font-mono text-xs text-slate-300">
-                            <div class="h-6 bg-slate-800 rounded animate-pulse w-3/4"></div>
-                            <div class="h-6 bg-slate-800 rounded animate-pulse w-full"></div>
-                        </div>
-                    </div>
-
-                    <!-- Card: Tags -->
-                    <div class="glass-panel rounded-xl p-5 flex flex-col h-full">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-medium text-slate-400">Target Tags</span>
-                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                        </div>
-                        <div id="tagsOutput" class="flex flex-wrap gap-2 content-start">
-                            <div class="h-6 w-16 bg-slate-800 rounded-full animate-pulse"></div>
-                            <div class="h-6 w-20 bg-slate-800 rounded-full animate-pulse"></div>
-                            <div class="h-6 w-12 bg-slate-800 rounded-full animate-pulse"></div>
-                        </div>
-                    </div>
-
-                    <!-- Card: Description (Full Width) -->
-                    <div class="md:col-span-2 glass-panel rounded-xl p-5">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs font-medium text-slate-400">Product Description</span>
-                            <button id="copyDescBtn" class="text-[10px] text-indigo-400 hover:text-indigo-300 font-mono transition-colors">COPY TEXT</button>
-                        </div>
-                        <div id="descOutput" class="w-full min-h-[200px] bg-slate-900/50 rounded-lg p-4 font-mono text-xs text-slate-400 leading-relaxed whitespace-pre-wrap border border-white/5">
-                            Waiting for analysis...
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-        </div>
-        
-        <!-- Loading Overlay -->
-        <div id="loadingOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
-            <div class="text-center transform transition-transform duration-300 translate-y-4">
-                <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <h3 class="text-white font-bold text-lg">Processing...</h3>
-                <p id="loadingText" class="text-slate-400 text-xs font-mono mt-1">Initializing AI Models</p>
+            <!-- Cards Container -->
+            <div id="cardsContainer" class="space-y-8 hidden pb-32">
+                <!-- Dynamic Content -->
             </div>
         </div>
-
     </main>
 
-    <!-- LOGIC SCRIPT -->
+    <!-- APPLICATION LOGIC -->
     <script>
-        /**
-         * CONFIGURATION & STATE
-         */
+        // --- CONFIGURATION ---
         const CONFIG = {
             apiKey: "AIzaSyBy7e3wOwLR4CmCEarpaE9ZEO8oZvtork0",
             clientId: "594148516220-5u0inttseubu4i4gat5aa27b2t80rn3g.apps.googleusercontent.com",
             scopes: "https://www.googleapis.com/auth/drive.file",
             ratios: [
-                { name: '2-3_Ratio', ratio: 2/3, label: '2:3 Print' },
-                { name: '3-4_Ratio', ratio: 3/4, label: '3:4 Print' },
-                { name: '4-5_Ratio', ratio: 4/5, label: '4:5 Print' },
-                { name: 'ISO', ratio: 1/1.414, label: 'ISO A1-A5' },
-                { name: '11-14_Ratio', ratio: 11/14, label: '11x14 Print' },
-                { name: 'Square', ratio: 1, label: '1:1 Preview' }
-            ]
+                { name: '2-3_Ratio', val: 2/3, label: '2:3' },
+                { name: '3-4_Ratio', val: 3/4, label: '3:4' },
+                { name: '4-5_Ratio', val: 4/5, label: '4:5' },
+                { name: 'ISO', val: 1/1.414, label: 'ISO' },
+                { name: '11-14_Ratio', val: 11/14, label: '11x14' },
+                { name: 'Square', val: 1, label: '1:1' }
+            ],
+            masterPrompt: `Analyze the uploaded product image and generate a complete Etsy Listing Package based on these rules:
+
+Store Identity: Privathinker (Digital Download / Printable Wall Art)
+
+Static Assets (MUST INCLUDE):
+- Size Guide:
+• 2:3 Ratio file for printing: 6x9, 8x12, 10x15, 12x18, 24x36 inches (10x15, 20x30, 30x45, 60x90 cm)
+• 3:4 Ratio file for printing: 6x8, 9x12, 12x16, 18x24 inches (15x20, 30x40, 45x60 cm)
+• 4:5 Ratio file for printing: 8x10, 16x20, 24x30 inches (20x25, 40x50 cm)
+• ISO (International Paper Size): A5, A4, A3, A2, A1 (50x70 cm)
+• 11x14 Ratio file for printing: 11x14 inches (22x28 cm)
+- Customer Support Note: 'Need a custom size or have a question? Please feel free to message us via Etsy conversation! We are happy to help.'
+
+STEPS:
+1. VISUAL ANALYSIS: 1-sentence summary.
+2. TITLES: Generate 5 high-ranking titles (Max 140 chars). Front-load keywords. Include hypothetical SEO Score (0-100). Format: 'Title Text | SEO Score: 95'.
+3. DESCRIPTION: Hook -> Warning -> Sizes -> Printing Advice -> CTA.
+4. TAGS: 13 comma-separated keywords.
+
+STRICT OUTPUT FORMAT:
+You MUST use these exact markdown headers for the parser to work:
+### VISUAL ANALYSIS
+### TITLES
+### DESCRIPTION
+### TAGS`
         };
 
-        const STATE = {
-            file: null,
-            blobs: [], // { name: string, blob: Blob }
-            seoContent: { titles: [], tags: [], description: "", fullText: "" },
-            zipBlob: null,
-            docBlob: null,
-            tokenClient: null,
-            accessToken: null
-        };
+        // --- STATE ---
+        let BATCH_QUEUE = [];
+        let BONUS_FILES = [];
+        let TOKEN_CLIENT = null;
+        let ACCESS_TOKEN = null;
+        let IS_PROCESSING = false;
 
-        const DOM = {
-            fileInput: document.getElementById('fileInput'),
-            dropZone: document.getElementById('dropZone'),
-            uploadPlaceholder: document.getElementById('uploadPlaceholder'),
-            previewThumb: document.getElementById('previewThumb'),
-            fileLabel: document.getElementById('fileLabel'),
-            fileName: document.getElementById('fileName'),
+        // --- DOM ELEMENTS ---
+        const ui = {
+            productInput: document.getElementById('productInput'),
+            productDrop: document.getElementById('productDropZone'),
+            productCount: document.getElementById('productCount'),
+            clearProductsBtn: document.getElementById('clearProductsBtn'),
+            
+            bonusInput: document.getElementById('bonusInput'),
+            bonusDrop: document.getElementById('bonusDropZone'),
+            bonusList: document.getElementById('bonusList'),
+            clearBonusBtn: document.getElementById('clearBonusBtn'),
+
             analyzeBtn: document.getElementById('analyzeBtn'),
+            analyzeText: document.getElementById('analyzeBtnText'),
             saveBtn: document.getElementById('saveBtn'),
-            consoleLog: document.getElementById('consoleLog'),
-            sectionVisuals: document.getElementById('sectionVisuals'),
-            sectionSEO: document.getElementById('sectionSEO'),
-            ratioContainer: document.getElementById('ratioContainer'),
-            titlesOutput: document.getElementById('titlesOutput'),
-            tagsOutput: document.getElementById('tagsOutput'),
-            descOutput: document.getElementById('descOutput'),
-            loadingOverlay: document.getElementById('loadingOverlay'),
-            loadingText: document.getElementById('loadingText'),
-            badgeRatios: document.getElementById('badgeRatios'),
-            badgeTags: document.getElementById('badgeTags'),
-            authIndicator: document.getElementById('authIndicator')
+            downloadBtn: document.getElementById('downloadBtn'),
+            console: document.getElementById('consoleLog'),
+            cardsArea: document.getElementById('cardsContainer'),
+            emptyState: document.getElementById('emptyState'),
+            progressBox: document.getElementById('progressContainer'),
+            progressBar: document.getElementById('progressBar'),
+            progressLabel: document.getElementById('progressLabel'),
+            progressPercent: document.getElementById('progressPercent'),
+            authDot: document.getElementById('authDot'),
+            authText: document.getElementById('authText')
         };
 
-        /**
-         * INITIALIZATION
-         */
+        // --- INIT ---
         window.onload = () => {
-            log("System initialized v3.0");
-            initGIS();
+            log("Batch Factory + Extras Loaded");
+            initAuth();
         };
 
-        function initGIS() {
+        function initAuth() {
             try {
-                STATE.tokenClient = google.accounts.oauth2.initTokenClient({
+                TOKEN_CLIENT = google.accounts.oauth2.initTokenClient({
                     client_id: CONFIG.clientId,
                     scope: CONFIG.scopes,
                     callback: (resp) => {
                         if (resp.error) {
-                            log("Auth Error: " + resp.error, "error");
+                            log(`Auth Error: ${resp.error}`, "error");
                             return;
                         }
-                        STATE.accessToken = resp.access_token;
-                        log("Google Auth Success. Token acquired.", "success");
-                        DOM.authIndicator.classList.remove('bg-slate-700');
-                        DOM.authIndicator.classList.add('bg-emerald-500', 'shadow-[0_0_10px_rgba(16,185,129,0.5)]');
-                        
-                        // Continue save process if that was the trigger
-                        performDriveUpload();
+                        ACCESS_TOKEN = resp.access_token;
+                        ui.authDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]";
+                        ui.authText.textContent = "Connected";
+                        log("Google Account Connected", "success");
+                        processDriveUpload();
                     },
                 });
-                log("Google Identity Service ready.");
-            } catch (e) {
-                log("Failed to init GIS. Check internet.", "error");
-            }
+            } catch (e) { log("GIS Library Error", "error"); }
         }
 
-        /**
-         * EVENT LISTENERS
-         */
-        DOM.fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
-        
-        // Drag and Drop Visuals
-        const dropEvents = ['dragenter', 'dragover', 'dragleave', 'drop'];
-        dropEvents.forEach(evt => DOM.dropZone.addEventListener(evt, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        }));
-        DOM.dropZone.addEventListener('dragenter', () => DOM.dropZone.classList.add('border-indigo-500', 'bg-slate-800/40'));
-        DOM.dropZone.addEventListener('dragleave', () => DOM.dropZone.classList.remove('border-indigo-500', 'bg-slate-800/40'));
-        DOM.dropZone.addEventListener('drop', (e) => {
-            DOM.dropZone.classList.remove('border-indigo-500', 'bg-slate-800/40');
-            handleFileSelect(e.dataTransfer.files[0]);
+        // --- UI HANDLERS: PRODUCTS ---
+        ui.productInput.addEventListener('change', (e) => addProducts(Array.from(e.target.files)));
+        setupDragDrop(ui.productDrop, (files) => addProducts(files), 'border-indigo-500', 'bg-slate-800/40');
+        ui.clearProductsBtn.addEventListener('click', () => {
+            BATCH_QUEUE = [];
+            renderUI();
+            ui.productInput.value = '';
         });
 
-        DOM.analyzeBtn.addEventListener('click', runAnalysis);
-        DOM.saveBtn.addEventListener('click', initiateSave);
-        
-        document.getElementById('copyDescBtn').addEventListener('click', () => {
-            if(STATE.seoContent.description) {
-                navigator.clipboard.writeText(STATE.seoContent.description);
-                log("Description copied to clipboard");
-            }
+        // --- UI HANDLERS: BONUS ---
+        ui.bonusInput.addEventListener('change', (e) => addBonus(Array.from(e.target.files)));
+        setupDragDrop(ui.bonusDrop, (files) => addBonus(files), 'border-emerald-500', 'bg-emerald-900/20');
+        ui.clearBonusBtn.addEventListener('click', () => {
+            BONUS_FILES = [];
+            renderBonusUI();
+            ui.bonusInput.value = '';
         });
 
-        /**
-         * CORE LOGIC: FILE & PREVIEW
-         */
-        function handleFileSelect(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-            
-            STATE.file = file;
-            
-            // UI Update
-            DOM.previewThumb.src = URL.createObjectURL(file);
-            DOM.previewThumb.classList.remove('hidden');
-            DOM.fileLabel.classList.remove('hidden');
-            DOM.uploadPlaceholder.classList.add('hidden');
-            DOM.fileName.textContent = file.name;
-            
-            DOM.analyzeBtn.disabled = false;
-            DOM.saveBtn.disabled = true;
-            DOM.analyzeBtn.classList.remove('bg-slate-800');
-            DOM.analyzeBtn.classList.add('bg-indigo-600');
-            
-            // Reset Dashboard
-            DOM.sectionVisuals.classList.add('opacity-50');
-            DOM.sectionSEO.classList.add('opacity-50');
-            DOM.ratioContainer.innerHTML = '<div class="text-xs text-slate-600 p-4">Ready to analyze...</div>';
-            DOM.titlesOutput.innerHTML = '';
-            DOM.tagsOutput.innerHTML = '';
-            DOM.descOutput.textContent = 'Waiting for analysis...';
-            DOM.badgeRatios.textContent = "0 Ratios";
-            DOM.badgeTags.textContent = "0 Tags";
-            
-            log(`File loaded: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`);
+        function setupDragDrop(el, callback, borderClass, bgClass) {
+            el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add(borderClass, bgClass); });
+            el.addEventListener('dragleave', () => { el.classList.remove(borderClass, bgClass); });
+            el.addEventListener('drop', (e) => {
+                e.preventDefault();
+                el.classList.remove(borderClass, bgClass);
+                callback(Array.from(e.dataTransfer.files));
+            });
         }
 
-        /**
-         * STEP 1: ANALYSIS (LOCAL + AI)
-         */
-        async function runAnalysis() {
-            if (!STATE.file) return;
-            
-            toggleLoading(true, "Generating Visual Assets...");
-            log("--- Starting Analysis Phase ---");
-            
-            try {
-                // 1. Image Resizing (Local)
-                await generateResizedImages(STATE.file);
-                DOM.sectionVisuals.classList.remove('opacity-50');
-                
-                // 2. Gemini Analysis (Cloud)
-                toggleLoading(true, "Consulting Gemini AI...");
-                await generateSEOContent(STATE.file);
-                DOM.sectionSEO.classList.remove('opacity-50');
-                
-                // 3. Prepare Blobs for Save
-                toggleLoading(true, "Packaging Files...");
-                await createZipPackage();
-                STATE.docBlob = new Blob([STATE.seoContent.fullText], {type: 'application/msword'});
-                
-                // 4. Enable Save
-                DOM.saveBtn.disabled = false;
-                DOM.saveBtn.innerHTML = `
-                    <svg class="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    <span>Step 2: Save to Drive</span>
-                `;
-                
-                log("Analysis Complete. Ready to Save.", "success");
-                
-            } catch (err) {
-                console.error(err);
-                log("Analysis Failed: " + err.message, "error");
-                alert("Error during analysis. See log.");
-            } finally {
-                toggleLoading(false);
-            }
-        }
+        // --- ACTIONS ---
+        ui.analyzeBtn.addEventListener('click', startBatchProcess);
+        ui.downloadBtn.addEventListener('click', startBatchDownload);
+        ui.saveBtn.addEventListener('click', () => {
+            if (!ACCESS_TOKEN) TOKEN_CLIENT.requestAccessToken({prompt: ''});
+            else processDriveUpload();
+        });
 
-        async function generateResizedImages(file) {
-            STATE.blobs = [];
-            DOM.ratioContainer.innerHTML = '';
-            
-            const bitmap = await createImageBitmap(file);
-            const { width: srcW, height: srcH } = bitmap;
-            
-            for (const r of CONFIG.ratios) {
-                // Calculate dimensions (Cover fit logic)
-                let tgtW = srcW, tgtH = srcH;
-                if (srcW / srcH > r.ratio) {
-                    tgtW = srcH * r.ratio; // Limited by height
-                } else {
-                    tgtH = srcW / r.ratio; // Limited by width
+        // --- STATE MANAGERS ---
+        function addProducts(files) {
+            const valid = files.filter(f => f.type.startsWith('image/'));
+            if (valid.length === 0) return;
+            valid.forEach(file => {
+                if (!BATCH_QUEUE.find(item => item.file.name === file.name)) {
+                    BATCH_QUEUE.push({
+                        id: Math.random().toString(36).substr(2, 9),
+                        file: file,
+                        status: 'pending', 
+                        thumbs: [], 
+                        seo: null, 
+                        doc: null
+                    });
                 }
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = tgtW;
-                canvas.height = tgtH;
-                const ctx = canvas.getContext('2d');
-                
-                // Center crop
-                const ox = (srcW - tgtW) / 2;
-                const oy = (srcH - tgtH) / 2;
-                
-                ctx.drawImage(bitmap, ox, oy, tgtW, tgtH, 0, 0, tgtW, tgtH);
-                
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-                STATE.blobs.push({ name: `${r.name}.jpg`, blob });
-                
-                // Render Thumbnail
-                const thumbDiv = document.createElement('div');
-                thumbDiv.className = "snap-start shrink-0 h-40 bg-slate-800 rounded-lg border border-white/10 overflow-hidden relative group fade-in";
-                thumbDiv.style.aspectRatio = `${r.ratio}`; // maintain aspect ratio in CSS
-                
-                thumbDiv.innerHTML = `
-                    <img src="${URL.createObjectURL(blob)}" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span class="text-[10px] text-white font-mono bg-black/70 px-2 py-1 rounded">${r.label}</span>
-                    </div>
-                    <div class="absolute bottom-0 inset-x-0 bg-slate-900/80 text-[10px] text-center text-slate-400 py-1 font-mono border-t border-white/10">
-                        ${Math.round(tgtW)}x${Math.round(tgtH)}
-                    </div>
-                `;
-                DOM.ratioContainer.appendChild(thumbDiv);
-            }
-            DOM.badgeRatios.textContent = `${STATE.blobs.length} Assets`;
-            log(`Generated ${STATE.blobs.length} image variations.`);
+            });
+            log(`Added ${valid.length} product images`);
+            renderUI();
         }
 
-        async function generateSEOContent(file) {
-            // Downscale for API to save bandwidth
-            const bitmap = await createImageBitmap(file);
-            const scale = 800 / Math.max(bitmap.width, bitmap.height);
-            const canvas = document.createElement('canvas');
-            canvas.width = bitmap.width * scale;
-            canvas.height = bitmap.height * scale;
-            canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-            const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+        function addBonus(files) {
+            files.forEach(f => {
+                if(!BONUS_FILES.find(bf => bf.name === f.name)) BONUS_FILES.push(f);
+            });
+            log(`Added ${files.length} bonus files`);
+            renderBonusUI();
+        }
 
-            const prompt = `Analyze this product image for Etsy.
-Store Name: Privathinker
+        // --- PROCESSING LOGIC ---
+        async function startBatchProcess() {
+            IS_PROCESSING = true;
+            renderUI();
+            toggleProgress(true);
 
-STATIC INFO:
-- Sizes: 2:3, 3:4, 4:5, ISO, 11x14
-- Contact: 'Message us for custom sizes'
+            const queue = BATCH_QUEUE.filter(i => i.status === 'pending');
+            let completed = 0;
 
-INSTRUCTIONS:
-Provide the output in Markdown with these EXACT headers as separators:
-### TITLES
-(List 5 SEO optimized titles, one per line)
-### DESCRIPTION
-(A persuasive description including: Hook -> Digital Warning -> Size List -> Printing Tips -> CTA)
-### TAGS
-(13 comma separated keywords)
+            for (const item of queue) {
+                try {
+                    item.status = 'processing';
+                    renderUI();
+                    updateProgress(completed, queue.length, `Analyzing: ${item.file.name}`);
 
-Do not add bold formatting (**). Keep it clean text.`;
+                    // 1. Resizer
+                    log(`Generating ratios for ${item.file.name}...`);
+                    item.thumbs = await generateRatios(item.file);
 
-            log("Sending request to Gemini 2.5 Flash...");
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [
-                            { text: prompt },
-                            { inlineData: { mimeType: 'image/jpeg', data: base64 } }
-                        ]
-                    }]
-                })
+                    // 2. AI
+                    log(`Sending to Gemini...`);
+                    item.seo = await callGemini(item.file);
+                    
+                    // 3. Doc Blob
+                    item.doc = new Blob([item.seo.raw], {type: 'application/msword'});
+
+                    item.status = 'complete';
+                    log(`Completed: ${item.file.name}`, "success");
+
+                } catch (e) {
+                    console.error(e);
+                    item.status = 'error';
+                    log(`Failed: ${item.file.name}`, "error");
+                }
+                completed++;
+                renderUI();
+            }
+
+            toggleProgress(false);
+            IS_PROCESSING = false;
+            renderUI();
+        }
+
+        // --- DOWNLOAD LOGIC (LOCAL) ---
+        async function startBatchDownload() {
+            const valid = BATCH_QUEUE.filter(i => i.status === 'complete' || i.status === 'uploaded');
+            if (valid.length === 0) return;
+
+            IS_PROCESSING = true;
+            renderUI();
+            log("Packaging Master ZIP...");
+
+            const master = new JSZip();
+            
+            // Loop Products
+            valid.forEach(item => {
+                const folderName = item.file.name.replace(/\.[^/.]+$/, "");
+                const folder = master.folder(folderName);
+                
+                // Add Images
+                item.thumbs.forEach(t => folder.file(t.name, t.blob));
+                // Add Doc
+                folder.file("SEO_Listing.doc", item.doc);
+                // Add Bonus Files
+                if(BONUS_FILES.length > 0) {
+                    const bonusFolder = folder.folder("Bonus_Files");
+                    BONUS_FILES.forEach(bf => bonusFolder.file(bf.name, bf));
+                }
             });
 
-            if (!res.ok) throw new Error(`Gemini API ${res.status}`);
-            const data = await res.json();
-            const text = data.candidates[0].content.parts[0].text;
-            
-            STATE.seoContent.fullText = text;
-            parseAndRenderSEO(text);
+            const content = await master.generateAsync({type:"blob"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(content);
+            a.download = `Privathinker_Batch_${new Date().toISOString().slice(0,19).replace(/[-T:]/g,"")}.zip`;
+            a.click();
+
+            IS_PROCESSING = false;
+            renderUI();
+            log("Download initiated", "success");
         }
 
-        function parseAndRenderSEO(text) {
-            // Regex parsing based on headers
-            const titlesMatch = text.match(/### TITLES\s*([\s\S]*?)(?=### DESCRIPTION|$)/i);
-            const descMatch = text.match(/### DESCRIPTION\s*([\s\S]*?)(?=### TAGS|$)/i);
-            const tagsMatch = text.match(/### TAGS\s*([\s\S]*?)$/i);
+        // --- DRIVE LOGIC (CLOUD) ---
+        async function processDriveUpload() {
+            IS_PROCESSING = true;
+            renderUI();
+            toggleProgress(true);
 
-            // Render Titles
-            DOM.titlesOutput.innerHTML = '';
-            if (titlesMatch) {
-                const lines = titlesMatch[1].trim().split('\n').filter(l => l.trim().length > 0);
-                STATE.seoContent.titles = lines;
-                lines.forEach(t => {
-                    const div = document.createElement('div');
-                    div.className = "bg-slate-800/50 p-2 rounded text-xs text-slate-300 border border-white/5 font-mono hover:bg-slate-800 transition-colors cursor-default";
-                    div.textContent = t.replace(/^\d+\.\s*/, '').replace(/^-\s*/, '');
-                    DOM.titlesOutput.appendChild(div);
-                });
-            }
+            const valid = BATCH_QUEUE.filter(i => i.status === 'complete');
+            let completed = 0;
 
-            // Render Tags
-            DOM.tagsOutput.innerHTML = '';
-            if (tagsMatch) {
-                const raw = tagsMatch[1].trim();
-                const tags = raw.split(/,|\n/).map(t => t.trim()).filter(t => t.length > 0);
-                STATE.seoContent.tags = tags;
-                DOM.badgeTags.textContent = `${tags.length} Tags`;
-                tags.forEach(t => {
-                    const span = document.createElement('span');
-                    span.className = "px-3 py-1 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded-full text-[10px] font-medium tracking-wide";
-                    span.textContent = t;
-                    DOM.tagsOutput.appendChild(span);
-                });
-            }
+            for (const item of valid) {
+                try {
+                    updateProgress(completed, valid.length, `Syncing ${item.file.name}...`);
+                    
+                    // 1. Create Parent Folder
+                    const folderName = `Privathinker - ${item.file.name}`;
+                    log(`Creating folder: ${folderName}`);
+                    const folderId = await driveCreateFolder(folderName);
 
-            // Render Desc
-            if (descMatch) {
-                STATE.seoContent.description = descMatch[1].trim();
-                DOM.descOutput.textContent = STATE.seoContent.description;
-            }
-            
-            log("SEO Content parsed and rendered.");
-        }
+                    // 2. Upload Resized Images (6 Files)
+                    for (const thumb of item.thumbs) {
+                        await driveUploadFile(thumb.blob, thumb.name, folderId, "image/jpeg");
+                    }
 
-        async function createZipPackage() {
-            const zip = new JSZip();
-            const folder = zip.folder("Privathinker_Assets");
-            
-            STATE.blobs.forEach(b => folder.file(b.name, b.blob));
-            
-            // Add SEO text file too for convenience
-            if (STATE.seoContent.fullText) {
-                folder.file("Listing_Info.txt", STATE.seoContent.fullText);
-            }
-            
-            STATE.zipBlob = await zip.generateAsync({type: "blob"});
-            log(`ZIP Package created: ${(STATE.zipBlob.size/1024/1024).toFixed(2)} MB`);
-        }
+                    // 3. Upload Word Doc (1 File)
+                    await driveUploadFile(item.doc, "SEO_Listing.doc", folderId, "application/msword");
 
-        /**
-         * STEP 2: DRIVE SAVE
-         */
-        function initiateSave() {
-            if (!STATE.accessToken) {
-                log("Authentication required. Check popup...");
-                STATE.tokenClient.requestAccessToken({prompt: ''});
-            } else {
-                performDriveUpload();
-            }
-        }
+                    // 4. Upload Bonus Files (N Files)
+                    if (BONUS_FILES.length > 0) {
+                        log(`Uploading ${BONUS_FILES.length} bonus files...`);
+                        for (const bf of BONUS_FILES) {
+                            await driveUploadFile(bf, bf.name, folderId, bf.type || 'application/octet-stream');
+                        }
+                    }
 
-        async function performDriveUpload() {
-            toggleLoading(true, "Creating Folder & Uploading...");
-            log("--- Starting Cloud Upload ---");
+                    item.status = 'uploaded';
+                    log(`Sync Complete: ${folderName}`, "success");
 
-            try {
-                // 1. Create Folder
-                const folderName = `Privathinker - ${new Date().toISOString().slice(0,19).replace('T', ' ')}`;
-                const folderId = await createFolder(folderName);
-                log(`Created Drive Folder: ${folderName}`);
-
-                // 2. Upload ZIP
-                await uploadToDrive(STATE.zipBlob, "Privathinker_Assets.zip", folderId, "application/zip");
-                log("Uploaded Image Assets ZIP");
-
-                // 3. Upload Doc
-                await uploadToDrive(STATE.docBlob, "SEO_Listing.doc", folderId, "application/msword");
-                log("Uploaded SEO Document");
-
-                log("Process Complete! All files saved.", "success");
-                alert("Success! Files uploaded to Google Drive.");
-                DOM.saveBtn.textContent = "Saved Successfully ✅";
-                DOM.saveBtn.classList.replace('bg-emerald-600', 'bg-slate-700');
-                
-            } catch (err) {
-                log("Upload Failed: " + err.message, "error");
-                if (err.status === 401) {
-                    log("Token expired. Retrying auth...", "error");
-                    STATE.accessToken = null;
+                } catch (e) {
+                    console.error(e);
+                    item.status = 'error';
+                    log(`Sync Failed for ${item.file.name}`, "error");
+                    if (e.status === 401) {
+                        log("Auth Token Expired. Click Save again.", "error");
+                        ACCESS_TOKEN = null;
+                        break;
+                    }
                 }
-            } finally {
-                toggleLoading(false);
+                completed++;
+                renderUI();
             }
+
+            toggleProgress(false);
+            IS_PROCESSING = false;
+            renderUI();
         }
 
-        // --- Drive API Helpers (Raw Fetch) ---
-        async function createFolder(name) {
+        // --- API HELPERS ---
+        async function driveCreateFolder(name) {
             const res = await fetch('https://www.googleapis.com/drive/v3/files', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${STATE.accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: name,
-                    mimeType: 'application/vnd.google-apps.folder'
-                })
+                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, mimeType: 'application/vnd.google-apps.folder' })
             });
-            if (!res.ok) throw { status: res.status, message: 'Folder creation failed' };
-            const data = await res.json();
-            return data.id;
+            if (!res.ok) throw { status: res.status };
+            return (await res.json()).id;
         }
 
-        async function uploadToDrive(blob, name, folderId, mimeType) {
+        async function driveUploadFile(blob, name, folderId, mime) {
             const metadata = { name: name, parents: [folderId] };
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -613,40 +504,211 @@ Do not add bold formatting (**). Keep it clean text.`;
 
             const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${STATE.accessToken}` },
+                headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` },
                 body: form
             });
-            if (!res.ok) throw { status: res.status, message: `Upload failed for ${name}` };
+            if (!res.ok) throw { status: res.status };
         }
 
-        /**
-         * UTILS
-         */
-        function log(msg, type="info") {
-            const div = document.createElement('div');
-            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit'});
-            
-            let colorClass = "text-slate-400";
-            if (type === "success") colorClass = "text-emerald-400";
-            if (type === "error") colorClass = "text-red-400 font-bold";
+        async function generateRatios(file) {
+            const bitmap = await createImageBitmap(file);
+            const srcW = bitmap.width;
+            const srcH = bitmap.height;
+            const results = [];
+            const MAX_DIM = 2400; // Optimize for speed/quality balance
 
-            div.innerHTML = `<span class="opacity-30 mr-2">[${time}]</span><span class="${colorClass}">${msg}</span>`;
-            
-            DOM.consoleLog.appendChild(div);
-            DOM.consoleLog.scrollTop = DOM.consoleLog.scrollHeight;
+            for (const r of CONFIG.ratios) {
+                let tgtW, tgtH, sx, sy, sw, sh;
+                
+                // Cover Logic
+                if (srcW / srcH > r.val) {
+                    sh = srcH;
+                    sw = srcH * r.val;
+                    sx = (srcW - sw) / 2;
+                    sy = 0;
+                    tgtH = srcH;
+                    tgtW = srcH * r.val;
+                } else {
+                    sw = srcW;
+                    sh = srcW / r.val;
+                    sx = 0;
+                    sy = (srcH - sh) / 2;
+                    tgtW = srcW;
+                    tgtH = srcW / r.val;
+                }
+
+                // Scale Logic
+                let scale = 1;
+                if (tgtW > MAX_DIM || tgtH > MAX_DIM) scale = Math.min(MAX_DIM / tgtW, MAX_DIM / tgtH);
+                
+                const finalW = Math.floor(tgtW * scale);
+                const finalH = Math.floor(tgtH * scale);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = finalW;
+                canvas.height = finalH;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, finalW, finalH);
+
+                const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.92));
+                results.push({
+                    name: `Privathinker_${r.name}.jpg`,
+                    label: r.label,
+                    blob: blob,
+                    url: URL.createObjectURL(blob)
+                });
+            }
+            return results;
         }
 
-        function toggleLoading(show, text) {
-            DOM.loadingText.textContent = text || "Processing...";
-            if (show) {
-                DOM.loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
-                DOM.loadingOverlay.querySelector('div').classList.remove('translate-y-4');
+        async function callGemini(file) {
+            const bitmap = await createImageBitmap(file);
+            const scale = 800 / Math.max(bitmap.width, bitmap.height);
+            const cvs = document.createElement('canvas');
+            cvs.width = bitmap.width * scale;
+            cvs.height = bitmap.height * scale;
+            cvs.getContext('2d').drawImage(bitmap, 0, 0, cvs.width, cvs.height);
+            const base64 = cvs.toDataURL('image/jpeg', 0.7).split(',')[1];
+
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: CONFIG.masterPrompt },
+                            { inlineData: { mimeType: 'image/jpeg', data: base64 } }
+                        ]
+                    }]
+                })
+            });
+
+            if (!res.ok) throw new Error("Gemini API Error");
+            const data = await res.json();
+            const text = data.candidates[0].content.parts[0].text;
+            
+            const titlesMatch = text.match(/### TITLES\s*([\s\S]*?)(?=### DESCRIPTION|$)/i);
+            const descMatch = text.match(/### DESCRIPTION\s*([\s\S]*?)(?=### TAGS|$)/i);
+            const tagsMatch = text.match(/### TAGS\s*([\s\S]*?)$/i);
+
+            const titles = [];
+            if (titlesMatch) {
+                titlesMatch[1].trim().split('\n').filter(l => l.trim()).forEach(line => {
+                    // Update regex to handle numeric lists (1.), dashes (-), or asterisks (*)
+                    const clean = line.replace(/^[\d-]+\.\s*/, '').replace(/^[-*]\s*/, '');
+                    const parts = clean.split('|');
+                    titles.push({ text: parts[0].trim(), meta: parts[1] ? parts[1].trim() : '' });
+                });
+            }
+
+            return {
+                titles: titles,
+                description: descMatch ? descMatch[1].trim() : "No description found.",
+                tags: tagsMatch ? tagsMatch[1].trim().split(/,|\n/).map(t => t.trim()).filter(t => t) : [],
+                raw: text
+            };
+        }
+
+        // --- RENDERERS ---
+        function renderUI() {
+            // Queue Stats
+            const count = BATCH_QUEUE.length;
+            ui.productCount.textContent = count > 0 ? `${count} image${count!==1?'s':''} queued` : 'Queue Empty';
+            ui.clearProductsBtn.style.display = count > 0 ? 'block' : 'none';
+            
+            // Buttons
+            const hasItems = count > 0;
+            const hasComplete = BATCH_QUEUE.some(i => i.status === 'complete' || i.status === 'uploaded');
+            
+            ui.emptyState.style.display = hasItems ? 'none' : 'flex';
+            ui.cardsArea.style.display = hasItems ? 'block' : 'none';
+
+            ui.analyzeBtn.disabled = !hasItems || IS_PROCESSING;
+            ui.analyzeText.textContent = IS_PROCESSING ? 'Processing...' : 'Start Processing';
+            
+            ui.saveBtn.disabled = !hasComplete || IS_PROCESSING;
+            ui.downloadBtn.disabled = !hasComplete || IS_PROCESSING;
+
+            // Cards
+            ui.cardsArea.innerHTML = '';
+            BATCH_QUEUE.forEach(item => ui.cardsArea.appendChild(createCard(item)));
+        }
+
+        function renderBonusUI() {
+            ui.clearBonusBtn.style.display = BONUS_FILES.length > 0 ? 'block' : 'none';
+            if (BONUS_FILES.length === 0) {
+                ui.bonusList.innerHTML = '<li class="text-[10px] font-mono text-slate-500 italic">No extras selected</li>';
             } else {
-                DOM.loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-                DOM.loadingOverlay.querySelector('div').classList.add('translate-y-4');
+                ui.bonusList.innerHTML = BONUS_FILES.map(f => `
+                    <li class="text-[9px] font-mono text-emerald-400 flex items-center gap-1.5 truncate">
+                        <svg class="w-3 h-3 flex-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="truncate">${f.name}</span>
+                    </li>
+                `).join('');
             }
         }
 
+        function createCard(item) {
+            const el = document.createElement('div');
+            el.className = `glass-panel rounded-2xl overflow-hidden card-enter border-l-4 mb-8 ${getStatusBorder(item.status)}`;
+            el.innerHTML = `
+                <div class="flex flex-col lg:flex-row min-h-[400px]">
+                    <div class="lg:w-[320px] bg-slate-900/40 border-b lg:border-r border-white/5 p-4 flex flex-col">
+                        <div class="mb-3 flex items-center justify-between">
+                            <span class="text-[10px] font-mono text-slate-400 truncate max-w-[150px]" title="${item.file.name}">${item.file.name}</span>
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase ${getStatusBadge(item.status)}">${item.status}</span>
+                        </div>
+                        <div class="flex-1 grid grid-cols-2 gap-2 content-start">
+                            ${item.thumbs.length > 0 ? item.thumbs.map(t => `<div class="relative group aspect-[3/4] bg-slate-950 rounded border border-white/5 overflow-hidden"><img src="${t.url}" class="w-full h-full object-contain"><div class="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] text-center text-slate-300 py-0.5 font-mono">${t.label}</div></div>`).join('') 
+                            : [1,2,3,4,5,6].map(() => `<div class="aspect-[3/4] bg-slate-800/20 rounded border border-white/5 flex items-center justify-center">${item.status==='processing'?'<div class="loader"></div>':'<span class="text-slate-700">...</span>'}</div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="flex-1 p-6 lg:p-8 bg-slate-950/30 flex flex-col relative">
+                        ${!item.seo ? `<div class="flex-1 flex flex-col items-center justify-center text-slate-700"><span class="text-xs font-mono mb-2">Pending Analysis</span><div class="w-16 h-1 bg-slate-800 rounded-full"></div></div>` : `
+                            <div class="mb-6">
+                                <h4 class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3">Titles</h4>
+                                <div class="space-y-2">${item.seo.titles.map(t => `<div class="flex items-start gap-3 p-2 rounded bg-slate-900/50 border border-white/5 group hover:bg-slate-800 transition-colors"><div class="flex-1"><p class="text-xs text-slate-300 font-medium">${t.text}</p>${t.meta?`<p class="text-[10px] text-emerald-500 mt-1 font-mono">${t.meta}</p>`:''}</div><button onclick="navigator.clipboard.writeText('${t.text.replace(/'/g, "\\'")}')" class="text-slate-500 hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button></div>`).join('')}</div>
+                            </div>
+                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-1">
+                                <div><h4 class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-3">Tags</h4><div class="flex flex-wrap gap-1.5">${item.seo.tags.map(t => `<span class="px-2.5 py-1 rounded-full bg-slate-800 border border-white/5 text-[10px] text-slate-300 font-mono">${t}</span>`).join('')}</div></div>
+                                <div class="flex flex-col h-full"><h4 class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-3">Description</h4><div class="flex-1 bg-slate-900/50 rounded-lg border border-white/5 p-3 overflow-y-auto custom-scroll max-h-[150px]"><pre class="whitespace-pre-wrap text-[10px] text-slate-400 font-sans leading-relaxed">${item.seo.description}</pre></div></div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+            return el;
+        }
+
+        // --- HELPERS ---
+        function getStatusBorder(s) {
+            if(s==='processing') return 'border-l-indigo-500';
+            if(s==='complete') return 'border-l-blue-500';
+            if(s==='uploaded') return 'border-l-emerald-500';
+            if(s==='error') return 'border-l-red-500';
+            return 'border-l-slate-700';
+        }
+        function getStatusBadge(s) {
+            if(s==='processing') return 'bg-indigo-900 text-indigo-300 animate-pulse';
+            if(s==='complete') return 'bg-blue-900 text-blue-300';
+            if(s==='uploaded') return 'bg-emerald-900 text-emerald-300';
+            if(s==='error') return 'bg-red-900 text-red-300';
+            return 'bg-slate-800 text-slate-500';
+        }
+        function toggleProgress(show) { ui.progressBox.style.display = show ? 'block' : 'none'; }
+        function updateProgress(curr, total, label) {
+            const pct = Math.round((curr / total) * 100);
+            ui.progressBar.style.width = `${pct}%`;
+            ui.progressPercent.textContent = `${pct}%`;
+            ui.progressLabel.textContent = label;
+        }
+        function log(msg, type) {
+            const div = document.createElement('div');
+            const color = type==='error'?'text-red-400':type==='success'?'text-emerald-400':'text-slate-400';
+            div.innerHTML = `<span class="opacity-30 mr-2">[${new Date().toLocaleTimeString('en-US',{hour12:false})}]</span><span class="${color}">${msg}</span>`;
+            ui.console.appendChild(div);
+            ui.console.scrollTop = ui.console.scrollHeight;
+        }
     </script>
 </body>
 </html>
