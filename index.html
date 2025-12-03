@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privathinker Operations Hub</title>
+    <title>Privathinker Cloud Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://apis.google.com/js/api.js"></script>
@@ -11,108 +11,163 @@
     <style>
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            100% { transform: scale(2); opacity: 0; }
-        }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        input[type="password"] { font-family: 'Courier New', monospace; letter-spacing: 2px; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-50 antialiased h-screen overflow-hidden flex flex-col md:flex-row font-sans">
+<body class="bg-slate-950 text-slate-50 antialiased h-screen overflow-hidden flex flex-col md:flex-row font-sans selection:bg-blue-500/30">
+
+    <!-- Credentials Setup Modal (Overlay) -->
+    <div id="setupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md transition-all duration-500">
+        <div class="w-full max-w-lg p-8 rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            
+            <div class="mb-8 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4 border border-slate-700 shadow-inner">
+                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white tracking-tight">Security Setup</h2>
+                <p class="text-slate-400 text-sm mt-2">Enter your API keys to unlock the Privathinker Hub.<br>Credentials are stored locally in your browser.</p>
+            </div>
+
+            <form id="credForm" class="space-y-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Google Client ID</label>
+                    <input type="password" id="inputClientId" required placeholder="12345...apps.googleusercontent.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-600" />
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Gemini API Key</label>
+                    <input type="password" id="inputApiKey" required placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all placeholder-slate-600" />
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-4 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg hover:shadow-blue-500/25 hover:scale-[1.01] transition-all duration-200">
+                        Securely Save & Initialize
+                    </button>
+                    <p class="text-center text-[10px] text-slate-600 mt-4">
+                        Data remains on your device (localStorage). Clear anytime via Settings.
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Left Panel: Controls -->
-    <div class="w-full md:w-1/2 p-8 flex flex-col relative bg-gradient-to-br from-slate-800 to-slate-900 border-r border-slate-700 overflow-y-auto">
+    <div class="w-full md:w-1/2 p-8 flex flex-col relative bg-slate-900 border-r border-slate-800 overflow-y-auto">
         
         <!-- Header -->
-        <div class="mb-8">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                <h2 class="text-xs font-bold tracking-widest text-blue-400 uppercase">Operations Hub</h2>
+        <div class="mb-8 flex justify-between items-start">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] animate-pulse"></div>
+                    <h2 class="text-[10px] font-bold tracking-[0.2em] text-blue-400 uppercase">Operations Hub</h2>
+                </div>
+                <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Privathinker</h1>
+                <p class="text-slate-400 text-sm">Cloud Asset Processor</p>
             </div>
-            <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Privathinker</h1>
-            <p class="text-slate-400 text-sm">Automated Asset Processing & Cloud Archival</p>
+            
+            <!-- Settings Button -->
+            <button id="settingsBtn" class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors" title="Settings: Clear Credentials">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
         </div>
 
         <!-- Protocol Warning (Hidden by default) -->
-        <div id="protocol-warning" class="hidden mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl">
-            <h3 class="text-red-400 font-bold flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                Setup Error
+        <div id="protocol-warning" class="hidden mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <h3 class="text-red-400 font-bold flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Environment Error
             </h3>
             <p class="text-xs text-red-200 mt-1">
-                Google Identity Services cannot run from a <code>file://</code> URL. 
-                Please serve this file using a local server (e.g., VS Code "Live Server", Python <code>http.server</code>, or GitHub Pages).
+                Google Identity Services requires a web server. You are running via <code>file://</code>. Please use a local server or GitHub Pages.
             </p>
         </div>
 
         <!-- Upload Area -->
-        <div class="relative group flex-1 min-h-[200px] flex flex-col">
+        <div class="relative group flex-1 min-h-[250px] flex flex-col">
             <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed" />
-            <div id="dropZone" class="flex-1 border-2 border-dashed border-slate-600 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center text-center group-hover:border-blue-400 group-hover:bg-slate-700/30">
-                <div id="emptyState" class="flex flex-col items-center text-slate-400 transition-opacity duration-300">
-                    <span class="text-5xl mb-4 transition-transform group-hover:scale-110 duration-300">☁️</span>
-                    <p class="font-medium group-hover:text-blue-300">Drop Product Image</p>
-                    <p className="text-xs text-slate-500 mt-1">or click to browse</p>
+            <div id="dropZone" class="flex-1 border border-dashed border-slate-700 bg-slate-900/50 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center text-center group-hover:border-blue-500/50 group-hover:bg-slate-800/50">
+                <div id="emptyState" class="flex flex-col items-center text-slate-500 transition-opacity duration-300">
+                    <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                        <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    </div>
+                    <p class="font-medium text-slate-300">Upload Product Image</p>
+                    <p class="text-xs text-slate-600 mt-2">Supports JPG, PNG • Max 20MB</p>
                 </div>
-                <div id="fileState" class="hidden flex-col items-center">
-                    <img id="previewImg" class="w-32 h-32 object-cover rounded-lg shadow-lg mb-4 border-2 border-emerald-500/50" />
-                    <p id="fileName" class="font-semibold text-emerald-400 truncate w-64"></p>
-                    <p class="text-xs text-emerald-600/70 mt-1">Ready to process</p>
+                <div id="fileState" class="hidden flex-col items-center w-full max-w-xs">
+                    <div class="relative w-full aspect-video rounded-lg overflow-hidden mb-4 shadow-xl border border-slate-700">
+                        <img id="previewImg" class="w-full h-full object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute bottom-2 left-2 right-2">
+                             <p id="fileName" class="font-medium text-white text-xs truncate"></p>
+                        </div>
+                    </div>
+                    <button class="text-xs text-red-400 hover:text-red-300 underline z-20 relative" onclick="document.getElementById('fileInput').value = ''; location.reload();">Remove & Reset</button>
                 </div>
             </div>
         </div>
 
         <!-- Main Action Button -->
-        <div class="mt-8">
-            <button id="actionBtn" disabled class="w-full py-5 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-3 bg-slate-700 text-slate-500 cursor-not-allowed">
-                <span id="btnIcon">✨</span>
-                <span id="btnText">Analyze & Save to Drive</span>
+        <div class="mt-8 space-y-4">
+            <button id="actionBtn" disabled class="w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wide shadow-lg transition-all duration-300 flex items-center justify-center gap-3 bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700">
+                <span id="btnIcon" class="text-lg">✨</span>
+                <span id="btnText">Waiting for Image</span>
             </button>
-            <div id="authStatus" class="mt-3 text-center text-xs text-slate-500 h-4"></div>
+            <div class="flex items-center justify-center gap-2 h-4">
+                <div id="authIndicator" class="w-2 h-2 rounded-full bg-slate-700"></div>
+                <div id="authStatus" class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Initializing...</div>
+            </div>
         </div>
     </div>
 
     <!-- Right Panel: Logs -->
-    <div class="w-full md:w-1/2 bg-slate-950 p-8 flex flex-col h-full overflow-hidden">
+    <div class="w-full md:w-1/2 bg-slate-950 p-8 flex flex-col h-full overflow-hidden border-t md:border-t-0 md:border-l border-slate-800">
         <div class="flex items-center justify-between mb-6 shrink-0">
-            <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">System Log</h3>
-            <div id="statusIndicator" class="h-2 w-2 rounded-full bg-slate-700"></div>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Process Log</h3>
+            <div id="statusIndicator" class="flex gap-1">
+                <span class="block w-1 h-1 bg-slate-800 rounded-full"></span>
+                <span class="block w-1 h-1 bg-slate-800 rounded-full"></span>
+                <span class="block w-1 h-1 bg-slate-800 rounded-full"></span>
+            </div>
         </div>
 
-        <div id="logContainer" class="flex-1 overflow-y-auto font-mono text-sm space-y-3 pr-2 scrollbar-hide pb-4">
-            <div class="text-slate-700 text-center mt-20 italic" id="emptyLog">Waiting for input...</div>
+        <div id="logContainer" class="flex-1 overflow-y-auto font-mono text-xs space-y-4 pr-2 scrollbar-hide pb-4">
+            <div class="text-slate-700 text-center mt-32 flex flex-col items-center" id="emptyLog">
+                <span class="text-2xl mb-2 opacity-20">⌨️</span>
+                <span>System Ready</span>
+            </div>
         </div>
 
         <!-- Progress Bar -->
-        <div id="progressContainer" class="mt-6 shrink-0 opacity-50 transition-opacity duration-300">
-            <div class="flex justify-between text-xs text-slate-400 mb-2">
-                <span id="progressStep" class="capitalize">Idle</span>
+        <div id="progressContainer" class="mt-6 shrink-0 opacity-40 grayscale transition-all duration-500">
+            <div class="flex justify-between text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-semibold">
+                <span id="progressStep">Idle</span>
                 <span id="progressPercent">0%</span>
             </div>
-            <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                <div id="progressBar" class="h-full bg-blue-500 w-0 transition-all duration-500 ease-out"></div>
+            <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-blue-600 to-purple-600 w-0 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Configuration ---
-        const CONFIG = {
-            apiKey: 'AIzaSyBy7e3wOwLR4CmCEarpaE9ZEO8oZvtork0',
-            clientId: '594148516220-5u0inttseubu4i4gat5aa27b2t80rn3g.apps.googleusercontent.com',
-            scopes: 'https://www.googleapis.com/auth/drive.file',
-            geminiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+        // --- Configuration & State ---
+        const CONSTANTS = {
+            SCOPES: 'https://www.googleapis.com/auth/drive.file',
+            GEMINI_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+            RATIOS: [
+                { name: '2-3_Ratio', ratio: 2/3 },
+                { name: '3-4_Ratio', ratio: 3/4 },
+                { name: '4-5_Ratio', ratio: 4/5 },
+                { name: 'ISO', ratio: 1/1.414 },
+                { name: '11-14_Ratio', ratio: 11/14 },
+                { name: 'Square', ratio: 1 }
+            ]
         };
 
-        const RATIOS = [
-            { name: '2-3_Ratio', ratio: 2/3 },
-            { name: '3-4_Ratio', ratio: 3/4 },
-            { name: '4-5_Ratio', ratio: 4/5 },
-            { name: 'ISO', ratio: 1/1.414 },
-            { name: '11-14_Ratio', ratio: 11/14 },
-            { name: 'Square', ratio: 1 }
-        ];
-
-        // --- State ---
+        let config = { apiKey: null, clientId: null };
+        
         let state = {
             file: null,
             tokenClient: null,
@@ -124,6 +179,14 @@
 
         // --- DOM Elements ---
         const els = {
+            // Modal
+            modal: document.getElementById('setupModal'),
+            credForm: document.getElementById('credForm'),
+            inputClientId: document.getElementById('inputClientId'),
+            inputApiKey: document.getElementById('inputApiKey'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            
+            // Main UI
             fileInput: document.getElementById('fileInput'),
             dropZone: document.getElementById('dropZone'),
             emptyState: document.getElementById('emptyState'),
@@ -133,6 +196,8 @@
             actionBtn: document.getElementById('actionBtn'),
             btnText: document.getElementById('btnText'),
             btnIcon: document.getElementById('btnIcon'),
+            
+            // Log & Status
             logContainer: document.getElementById('logContainer'),
             emptyLog: document.getElementById('emptyLog'),
             statusIndicator: document.getElementById('statusIndicator'),
@@ -140,20 +205,68 @@
             progressStep: document.getElementById('progressStep'),
             progressPercent: document.getElementById('progressPercent'),
             authStatus: document.getElementById('authStatus'),
+            authIndicator: document.getElementById('authIndicator'),
             warning: document.getElementById('protocol-warning')
         };
 
-        // --- Initialization ---
+        // --- Initialization Flow ---
         window.onload = () => {
             if (window.location.protocol === 'file:') {
                 els.warning.classList.remove('hidden');
-                addLog('CRITICAL: Application running via file:// protocol. Auth will fail.', 'error');
+                addLog('CRITICAL: Running via file:// protocol. Auth will fail.', 'error');
             }
-            
-            // Load Google Scripts
-            checkGoogleLibs();
+            loadCredentials();
         };
 
+        function loadCredentials() {
+            const stored = localStorage.getItem('privathinker_creds');
+            if (stored) {
+                try {
+                    const creds = JSON.parse(stored);
+                    if (creds.apiKey && creds.clientId) {
+                        config.apiKey = creds.apiKey;
+                        config.clientId = creds.clientId;
+                        addLog('Credentials loaded from vault.', 'info');
+                        checkGoogleLibs();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Credential parse error', e);
+                }
+            }
+            // If no valid creds, show modal
+            showSetupModal();
+        }
+
+        function showSetupModal() {
+            els.modal.classList.remove('hidden');
+        }
+
+        els.credForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const clientId = els.inputClientId.value.trim();
+            const apiKey = els.inputApiKey.value.trim();
+
+            if (clientId && apiKey) {
+                const creds = { clientId, apiKey };
+                localStorage.setItem('privathinker_creds', JSON.stringify(creds));
+                config.apiKey = apiKey;
+                config.clientId = clientId;
+                
+                els.modal.classList.add('hidden');
+                addLog('Credentials saved. Initializing systems...', 'success');
+                checkGoogleLibs();
+            }
+        });
+
+        els.settingsBtn.addEventListener('click', () => {
+            if (confirm('Clear stored credentials and reload? This will require you to re-enter your keys.')) {
+                localStorage.removeItem('privathinker_creds');
+                window.location.reload();
+            }
+        });
+
+        // --- Google Integrations ---
         function checkGoogleLibs() {
             if (window.gapi) handleGapiLoad();
             if (window.google) handleGisLoad();
@@ -161,46 +274,67 @@
 
         function handleGapiLoad() {
             gapi.load('client', async () => {
-                await gapi.client.init({
-                    apiKey: CONFIG.apiKey,
-                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                });
-                state.gapiLoaded = true;
-                updateAuthStatus();
+                try {
+                    await gapi.client.init({
+                        apiKey: config.apiKey,
+                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                    });
+                    state.gapiLoaded = true;
+                    addLog('Google API Client initialized.', 'info');
+                    updateAuthStatus();
+                } catch (error) {
+                    addLog(`GAPI Error: ${error.result?.error?.message || error}`, 'error');
+                    if(error.result?.error?.code === 400) {
+                         alert("Invalid API Key. Please check settings.");
+                         localStorage.removeItem('privathinker_creds');
+                         window.location.reload();
+                    }
+                }
             });
         }
 
         function handleGisLoad() {
-            state.tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CONFIG.clientId,
-                scope: CONFIG.scopes,
-                callback: (resp) => {
-                    if (resp.error) {
-                        addLog(`Auth Error: ${resp.error}`, 'error');
-                        return;
-                    }
-                    state.accessToken = resp.access_token;
-                    addLog('Authentication successful!', 'success');
-                    updateAuthStatus();
-                    startWorkflow(); // Continue workflow after auth
-                },
-            });
-            state.gisLoaded = true;
-            updateAuthStatus();
+            try {
+                state.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: config.clientId,
+                    scope: CONSTANTS.SCOPES,
+                    callback: (resp) => {
+                        if (resp.error) {
+                            addLog(`Auth Error: ${resp.error}`, 'error');
+                            return;
+                        }
+                        state.accessToken = resp.access_token;
+                        addLog('OAuth Token acquired successfully.', 'success');
+                        updateAuthStatus();
+                        startWorkflow(); // Continue automatic workflow after auth
+                    },
+                });
+                state.gisLoaded = true;
+                addLog('Identity Service ready.', 'info');
+                updateAuthStatus();
+            } catch (error) {
+                 addLog(`GIS Error: ${error}`, 'error');
+                 alert("Invalid Client ID or GIS Config. Please check settings.");
+                 localStorage.removeItem('privathinker_creds');
+                 window.location.reload();
+            }
         }
 
         function updateAuthStatus() {
             if (state.gisLoaded && state.gapiLoaded) {
                 if(state.accessToken) {
-                    els.authStatus.innerText = '✅ Authenticated with Google';
-                    els.authStatus.classList.add('text-emerald-500');
+                    els.authStatus.innerText = 'Authenticated';
+                    els.authStatus.className = 'text-[10px] uppercase tracking-widest text-emerald-400 font-bold';
+                    els.authIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
                 } else {
-                    els.authStatus.innerText = 'Waiting for sign in...';
+                    els.authStatus.innerText = 'Ready to Sign In';
+                    els.authStatus.className = 'text-[10px] uppercase tracking-widest text-blue-400 font-semibold';
+                    els.authIndicator.className = 'w-2 h-2 rounded-full bg-blue-500';
                 }
             }
         }
 
-        // --- Event Listeners ---
+        // --- Workflow Handlers ---
         els.fileInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
                 handleFileSelect(e.target.files[0]);
@@ -211,36 +345,32 @@
             if (state.isProcessing) return;
             
             if (!state.accessToken) {
-                addLog('Requesting Google Access...', 'process');
+                addLog('Initiating Google Sign-In...', 'process');
+                // Trigger Popup
                 state.tokenClient.requestAccessToken({ prompt: '' });
             } else {
-                // Check if token is expired by making a dummy call or just re-requesting if explicit
-                // Simple version: just start, if 401, we should handle it, but for SPA simple flow:
                 startWorkflow();
             }
         });
 
-        // --- Core Logic ---
-
         function handleFileSelect(file) {
             state.file = file;
             
-            // Update UI
             els.emptyState.classList.add('hidden');
             els.fileState.classList.remove('hidden');
             els.fileState.classList.add('flex');
             els.fileName.textContent = file.name;
             els.previewImg.src = URL.createObjectURL(file);
             
-            // Enable Button
             els.actionBtn.disabled = false;
-            els.actionBtn.className = "w-full py-5 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-500 text-white hover:scale-[1.02] hover:shadow-blue-500/20 shadow-blue-900/20 cursor-pointer";
+            els.actionBtn.className = "w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wide shadow-lg transition-all duration-300 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white hover:shadow-blue-500/25 cursor-pointer border border-blue-400/20";
+            els.btnText.innerText = "Analyze & Save to Drive";
             
-            // Reset Layout
+            // Clear log visually but keep history in memory if needed (here we clear)
             els.logContainer.innerHTML = '';
-            els.emptyLog.style.display = 'block';
+            els.emptyLog.style.display = 'flex';
             els.logContainer.appendChild(els.emptyLog);
-            addLog(`Image selected: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`, 'info');
+            addLog(`Asset staged: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`, 'info');
         }
 
         async function startWorkflow() {
@@ -248,45 +378,51 @@
 
             setProcessing(true);
             try {
-                // Step 1: Resize Images
-                updateProgress('Resizing Images', 10);
-                addLog('Starting image processing...', 'process');
+                // Step 1: Resize
+                updateProgress('Processing Assets', 15);
+                addLog('Generating multi-ratio variants...', 'process');
                 const zipBlob = await generateImageZip(state.file);
-                addLog(`ZIP Package created: ${(zipBlob.size/1024/1024).toFixed(2)}MB`, 'success');
+                addLog(`ZIP archive created (${(zipBlob.size/1024/1024).toFixed(2)}MB).`, 'success');
 
-                // Step 2: AI SEO
-                updateProgress('Generating SEO', 40);
-                addLog('Consulting Gemini for SEO...', 'process');
+                // Step 2: AI
+                updateProgress('Consulting AI', 45);
+                addLog('Sending to Gemini for SEO analysis...', 'process');
                 const seoBlob = await generateSEO(state.file);
-                addLog('SEO Listing generated.', 'success');
+                addLog('SEO listings compiled.', 'success');
 
-                // Step 3: Drive Folder
-                updateProgress('Creating Folder', 70);
+                // Step 3: Drive
+                updateProgress('Cloud Archival', 75);
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                 const folderName = `Privathinker - ${timestamp}`;
                 addLog(`Creating Drive folder: ${folderName}`, 'process');
                 const folderId = await createDriveFolder(folderName);
                 
                 // Step 4: Upload
-                updateProgress('Uploading Files', 85);
-                addLog('Uploading assets to Drive...', 'process');
+                updateProgress('Uploading', 90);
+                addLog('Transmitting data to Google Drive...', 'process');
                 await Promise.all([
                     uploadFile(zipBlob, 'Resized_Images.zip', folderId, 'application/zip'),
                     uploadFile(seoBlob, 'Listing_SEO.doc', folderId, 'application/msword')
                 ]);
 
-                updateProgress('Complete', 100);
-                addLog('✨ Workflow successfully finished!', 'success');
+                updateProgress('Completed', 100);
+                addLog('All operations successful. Files archived.', 'success');
                 setProcessing(false);
+                
+                // Reset button state slightly to indicate success but keep enabled
+                els.btnText.innerText = "Processing Complete";
+                setTimeout(() => {
+                    if(!state.isProcessing) els.btnText.innerText = "Analyze & Save Another";
+                }, 3000);
 
             } catch (error) {
                 console.error(error);
-                addLog(`Error: ${error.message}`, 'error');
+                addLog(`FAILURE: ${error.message}`, 'error');
                 setProcessing(false);
             }
         }
 
-        // --- Helpers: Image Processing ---
+        // --- Logic: Image Processor ---
         async function generateImageZip(file) {
             const zip = new JSZip();
             const folder = zip.folder("Resized_Images");
@@ -294,13 +430,11 @@
             const bitmap = await createImageBitmap(file);
             const { width: srcW, height: srcH } = bitmap;
 
-            for (const r of RATIOS) {
-                addLog(`Processing ratio: ${r.name}`, 'info');
-                
-                // Calculate dimensions (Cover logic)
+            for (const r of CONSTANTS.RATIOS) {
                 let tgtW = srcW;
                 let tgtH = srcH;
                 
+                // Crop logic: Cover
                 if (srcW / srcH > r.ratio) {
                     tgtW = srcH * r.ratio;
                 } else {
@@ -312,7 +446,6 @@
                 canvas.height = tgtH;
                 const ctx = canvas.getContext('2d');
                 
-                // Center crop
                 const ox = (srcW - tgtW) / 2;
                 const oy = (srcH - tgtH) / 2;
                 
@@ -325,9 +458,9 @@
             return zip.generateAsync({ type: "blob" });
         }
 
-        // --- Helpers: AI ---
+        // --- Logic: Gemini AI ---
         async function generateSEO(file) {
-            // Resize for API (Max 800px)
+            // Downscale for API efficiency
             const bitmap = await createImageBitmap(file);
             const scale = 800 / Math.max(bitmap.width, bitmap.height);
             const canvas = document.createElement('canvas');
@@ -358,7 +491,7 @@ STEPS:
 
 FORMAT: Markdown.`;
 
-            const response = await fetch(`${CONFIG.geminiUrl}?key=${CONFIG.apiKey}`, {
+            const response = await fetch(`${CONSTANTS.GEMINI_URL}?key=${config.apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -371,47 +504,41 @@ FORMAT: Markdown.`;
                 })
             });
 
-            if (!response.ok) throw new Error(`Gemini API Error: ${response.statusText}`);
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(`Gemini API: ${err.error?.message || response.statusText}`);
+            }
             
             const data = await response.json();
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
             
-            if (!text) throw new Error("No text generated by AI");
+            if (!text) throw new Error("Gemini returned empty response.");
             
-            // Return text as Blob
             return new Blob([text], { type: 'application/msword' });
         }
 
-        // --- Helpers: Drive ---
+        // --- Logic: Google Drive ---
         async function createDriveFolder(name) {
-            // Using GAPI client as requested, but wrapping in promise for consistency
-            // Note: gapi.client must be initialized
-            try {
-                const res = await gapi.client.drive.files.create({
-                    resource: {
-                        name: name,
-                        mimeType: 'application/vnd.google-apps.folder'
-                    },
-                    fields: 'id'
-                });
-                return res.result.id;
-            } catch (err) {
-                // Fallback to fetch if GAPI fails (or token issues) but we have accessToken
-                const res = await fetch('https://www.googleapis.com/drive/v3/files', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${state.accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        mimeType: 'application/vnd.google-apps.folder'
-                    })
-                });
-                if(!res.ok) throw new Error('Folder creation failed');
-                const data = await res.json();
-                return data.id;
+            // Using fetch directly as fallback if GAPI wrapper has issues, but GAPI client is cleaner if auth works.
+            // Let's stick to fetch for raw control over headers with the valid accessToken
+            const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${state.accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    mimeType: 'application/vnd.google-apps.folder'
+                })
+            });
+            
+            if(!res.ok) {
+                 const err = await res.json();
+                 throw new Error(`Drive Create Error: ${err.error?.message || res.status}`);
             }
+            const data = await res.json();
+            return data.id;
         }
 
         async function uploadFile(blob, name, folderId, mimeType) {
@@ -432,32 +559,34 @@ FORMAT: Markdown.`;
                 body: form
             });
 
-            if (!res.ok) throw new Error(`Failed to upload ${name}`);
+            if (!res.ok) throw new Error(`Upload Failed: ${name}`);
         }
 
-        // --- UI Helper Functions ---
-
+        // --- UI Utilities ---
         function addLog(msg, type) {
             const div = document.createElement('div');
-            div.className = "flex gap-3 animate-pulse";
-            
-            // Remove previous pulse classes
-            Array.from(els.logContainer.children).forEach(c => c.classList.remove('animate-pulse'));
-            
-            const time = new Date().toLocaleTimeString('en-US', {hour12: false});
-            
-            let color = 'text-slate-300';
-            let icon = '';
-            if (type === 'success') { color = 'text-emerald-400 font-semibold'; icon = '✓ '; }
-            if (type === 'error') { color = 'text-red-400 font-bold'; icon = '✕ '; }
-            if (type === 'process') { color = 'text-blue-300'; icon = '⚡ '; }
-
-            div.innerHTML = `
-                <span class="text-slate-600 text-xs mt-1 shrink-0 font-mono">${time}</span>
-                <div class="${color}">${icon}${msg}</div>
-            `;
+            div.className = "flex gap-3 py-1 border-l-2 border-transparent pl-2 hover:bg-white/5 transition-colors group";
             
             els.emptyLog.style.display = 'none';
+            
+            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            
+            let colorClass = 'text-slate-400';
+            let icon = '•';
+            let borderClass = 'border-slate-800';
+
+            if (type === 'success') { colorClass = 'text-emerald-400'; icon = '✓'; borderClass = 'border-emerald-500/50'; }
+            if (type === 'error') { colorClass = 'text-red-400 font-semibold'; icon = '✕'; borderClass = 'border-red-500'; }
+            if (type === 'process') { colorClass = 'text-blue-300'; icon = '⚡'; borderClass = 'border-blue-500/50'; }
+            if (type === 'info') { colorClass = 'text-slate-300'; icon = 'i'; }
+
+            div.classList.add(borderClass.split(' ')[0]); // simplistic add
+
+            div.innerHTML = `
+                <span class="text-slate-600 text-[10px] mt-0.5 font-mono opacity-70">${time}</span>
+                <div class="${colorClass} text-xs break-all">${msg}</div>
+            `;
+            
             els.logContainer.appendChild(div);
             div.scrollIntoView({ behavior: 'smooth' });
         }
@@ -470,15 +599,21 @@ FORMAT: Markdown.`;
 
         function setProcessing(isProcessing) {
             state.isProcessing = isProcessing;
-            els.statusIndicator.className = `h-2 w-2 rounded-full ${isProcessing ? 'bg-green-500 animate-ping' : 'bg-slate-700'}`;
-            els.progressContainer.style.opacity = isProcessing ? '1' : '0.5';
+            
+            // UI States
+            els.progressContainer.style.opacity = isProcessing ? '1' : '0.4';
+            els.progressContainer.style.filter = isProcessing ? 'none' : 'grayscale(100%)';
             
             if (isProcessing) {
                 els.actionBtn.disabled = true;
                 els.btnText.innerText = "Processing...";
-                els.btnIcon.innerHTML = `<svg class="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+                els.actionBtn.classList.remove('from-blue-600', 'to-blue-500');
+                els.actionBtn.classList.add('bg-slate-800', 'text-slate-400');
+                els.btnIcon.innerHTML = `<svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
             } else {
                 els.actionBtn.disabled = false;
+                els.actionBtn.classList.add('from-blue-600', 'to-blue-500');
+                els.actionBtn.classList.remove('bg-slate-800', 'text-slate-400');
                 els.btnText.innerText = "Analyze & Save to Drive";
                 els.btnIcon.innerText = "✨";
             }
