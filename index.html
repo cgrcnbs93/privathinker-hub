@@ -8,433 +8,313 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        input[type="password"] { font-family: 'Courier New', monospace; letter-spacing: 2px; }
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: #1e293b; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-50 antialiased h-screen overflow-hidden flex flex-col md:flex-row font-sans selection:bg-blue-500/30">
+<body class="bg-slate-950 text-slate-50 h-screen overflow-hidden flex selection:bg-indigo-500/30">
 
-    <!-- Credentials Setup Modal (Overlay) -->
-    <div id="setupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md transition-all duration-500">
-        <div class="w-full max-w-lg p-8 rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl relative overflow-hidden group">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-            
-            <div class="mb-8 text-center">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4 border border-slate-700 shadow-inner">
-                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                </div>
-                <h2 class="text-2xl font-bold text-white tracking-tight">Security Setup</h2>
-                <p class="text-slate-400 text-sm mt-2">Enter your API keys to unlock the Privathinker Hub.<br>Credentials are stored locally in your browser.</p>
-            </div>
-
-            <form id="credForm" class="space-y-6">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Google Client ID</label>
-                    <input type="password" id="inputClientId" required placeholder="12345...apps.googleusercontent.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-600" />
-                </div>
-                
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Gemini API Key</label>
-                    <input type="password" id="inputApiKey" required placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all placeholder-slate-600" />
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit" class="w-full py-4 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg hover:shadow-blue-500/25 hover:scale-[1.01] transition-all duration-200">
-                        Securely Save & Initialize
-                    </button>
-                    <p class="text-center text-[10px] text-slate-600 mt-4">
-                        Data remains on your device (localStorage). Clear anytime via Settings.
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Left Panel: Controls -->
-    <div class="w-full md:w-1/2 p-8 flex flex-col relative bg-slate-900 border-r border-slate-800 overflow-y-auto">
+    <!-- LEFT COLUMN: Controls & Input (30%) -->
+    <div class="w-[30%] h-full flex flex-col border-r border-slate-800 bg-slate-900/50 relative z-10 shadow-2xl">
         
         <!-- Header -->
-        <div class="mb-8 flex justify-between items-start">
-            <div>
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] animate-pulse"></div>
-                    <h2 class="text-[10px] font-bold tracking-[0.2em] text-blue-400 uppercase">Operations Hub</h2>
+        <div class="p-6 border-b border-slate-800 bg-slate-900">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
-                <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Privathinker</h1>
-                <p class="text-slate-400 text-sm">Cloud Asset Processor</p>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight text-white">Privathinker</h1>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Cloud Hub v2.0</p>
+                </div>
             </div>
-            
-            <!-- Settings Button -->
-            <button id="settingsBtn" class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors" title="Settings: Clear Credentials">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </button>
         </div>
 
-        <!-- Protocol Warning (Hidden by default) -->
-        <div id="protocol-warning" class="hidden mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <h3 class="text-red-400 font-bold flex items-center gap-2 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                Environment Error
-            </h3>
-            <p class="text-xs text-red-200 mt-1">
-                Google Identity Services requires a web server. You are running via <code>file://</code>. Please use a local server or GitHub Pages.
-            </p>
-        </div>
-
-        <!-- Upload Area -->
-        <div class="relative group flex-1 min-h-[250px] flex flex-col">
-            <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed" />
-            <div id="dropZone" class="flex-1 border border-dashed border-slate-700 bg-slate-900/50 rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center text-center group-hover:border-blue-500/50 group-hover:bg-slate-800/50">
-                <div id="emptyState" class="flex flex-col items-center text-slate-500 transition-opacity duration-300">
-                    <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg class="w-8 h-8 text-slate-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    </div>
-                    <p class="font-medium text-slate-300">Upload Product Image</p>
-                    <p class="text-xs text-slate-600 mt-2">Supports JPG, PNG • Max 20MB</p>
-                </div>
-                <div id="fileState" class="hidden flex-col items-center w-full max-w-xs">
-                    <div class="relative w-full aspect-video rounded-lg overflow-hidden mb-4 shadow-xl border border-slate-700">
-                        <img id="previewImg" class="w-full h-full object-cover" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        <div class="absolute bottom-2 left-2 right-2">
-                             <p id="fileName" class="font-medium text-white text-xs truncate"></p>
+        <!-- Upload Zone -->
+        <div class="p-6 flex-none">
+            <div class="relative group h-48 w-full">
+                <input type="file" id="fileInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                <div id="dropZone" class="absolute inset-0 border-2 border-dashed border-slate-700 bg-slate-800/30 rounded-xl flex flex-col items-center justify-center transition-all duration-300 group-hover:border-indigo-500 group-hover:bg-slate-800/80">
+                    <div id="uploadPlaceholder" class="text-center p-4">
+                        <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-3 border border-slate-700 group-hover:scale-110 transition-transform">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                         </div>
+                        <p class="text-sm font-medium text-slate-300">Drag & Drop Image</p>
+                        <p class="text-xs text-slate-500 mt-1">JPG, PNG (Max 20MB)</p>
                     </div>
-                    <button class="text-xs text-red-400 hover:text-red-300 underline z-20 relative" onclick="document.getElementById('fileInput').value = ''; location.reload();">Remove & Reset</button>
+                    <img id="previewThumb" class="hidden absolute inset-0 w-full h-full object-cover rounded-xl opacity-60" />
+                    <div id="fileInfo" class="hidden absolute bottom-2 left-0 right-0 px-4 py-2 bg-black/60 backdrop-blur-sm text-center">
+                        <p class="text-xs text-white truncate font-mono" id="fileName"></p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Action Button -->
-        <div class="mt-8 space-y-4">
-            <button id="actionBtn" disabled class="w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wide shadow-lg transition-all duration-300 flex items-center justify-center gap-3 bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700">
-                <span id="btnIcon" class="text-lg">✨</span>
-                <span id="btnText">Waiting for Image</span>
+        <!-- Action Area -->
+        <div class="px-6 flex gap-3">
+            <button id="analyzeBtn" disabled class="flex-1 py-3 px-4 rounded-lg font-semibold text-sm bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                Analyze
             </button>
-            <div class="flex items-center justify-center gap-2 h-4">
-                <div id="authIndicator" class="w-2 h-2 rounded-full bg-slate-700"></div>
-                <div id="authStatus" class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Initializing...</div>
+            <button id="saveBtn" disabled class="flex-1 py-3 px-4 rounded-lg font-semibold text-sm bg-emerald-600 text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                Save
+            </button>
+        </div>
+
+        <!-- Progress Log -->
+        <div class="flex-1 p-6 flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">System Log</h3>
+                <div id="authStatus" class="w-2 h-2 rounded-full bg-slate-700" title="Auth Status"></div>
+            </div>
+            <div id="logContainer" class="flex-1 bg-slate-950 rounded-lg border border-slate-800 p-3 font-mono text-[10px] text-slate-400 overflow-y-auto scrollbar-thin space-y-1">
+                <div class="opacity-30 italic">Waiting for input...</div>
             </div>
         </div>
     </div>
 
-    <!-- Right Panel: Logs -->
-    <div class="w-full md:w-1/2 bg-slate-950 p-8 flex flex-col h-full overflow-hidden border-t md:border-t-0 md:border-l border-slate-800">
-        <div class="flex items-center justify-between mb-6 shrink-0">
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Process Log</h3>
-            <div id="statusIndicator" class="flex gap-1">
-                <span class="block w-1 h-1 bg-slate-800 rounded-full"></span>
-                <span class="block w-1 h-1 bg-slate-800 rounded-full"></span>
-                <span class="block w-1 h-1 bg-slate-800 rounded-full"></span>
+    <!-- RIGHT COLUMN: Dashboard (70%) -->
+    <div class="w-[70%] h-full bg-slate-950 overflow-y-auto scrollbar-thin relative">
+        <div class="p-8 max-w-6xl mx-auto space-y-8">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-white tracking-tight">Live Results Dashboard</h2>
+                <div class="flex gap-2 text-xs text-slate-500 bg-slate-900 py-1 px-3 rounded-full border border-slate-800">
+                    <span id="statRatios">0 Ratios</span> • <span id="statTags">0 Tags</span>
+                </div>
             </div>
+
+            <!-- Section 1: Visuals -->
+            <section>
+                <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Generated Ratios
+                </h3>
+                <div id="ratioGrid" class="grid grid-cols-6 gap-4">
+                    <!-- Placeholders -->
+                    <div class="aspect-[2/3] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">2:3</span></div>
+                    <div class="aspect-[3/4] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">3:4</span></div>
+                    <div class="aspect-[4/5] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">4:5</span></div>
+                    <div class="aspect-[1/1.4] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">ISO</span></div>
+                    <div class="aspect-[11/14] bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">11:14</span></div>
+                    <div class="aspect-square bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center"><span class="text-xs text-slate-600">1:1</span></div>
+                </div>
+            </section>
+
+            <!-- Section 2: AI Content -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
+                
+                <!-- Titles Card -->
+                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 flex flex-col h-full">
+                    <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                        Optimized Titles
+                    </h3>
+                    <div id="titlesContainer" class="flex-1 space-y-3">
+                        <div class="h-8 bg-slate-800/50 rounded animate-pulse w-3/4"></div>
+                        <div class="h-8 bg-slate-800/50 rounded animate-pulse w-full"></div>
+                        <div class="h-8 bg-slate-800/50 rounded animate-pulse w-5/6"></div>
+                    </div>
+                </div>
+
+                <!-- Tags Card -->
+                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 flex flex-col h-full">
+                    <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        Target Tags
+                    </h3>
+                    <div id="tagsContainer" class="flex flex-wrap gap-2 content-start">
+                        <span class="px-3 py-1 bg-slate-800 rounded-full text-xs text-slate-500 animate-pulse">waiting for ai...</span>
+                    </div>
+                </div>
+
+                <!-- Description Card (Full Width) -->
+                <div class="md:col-span-2 bg-slate-900 rounded-xl border border-slate-800 p-5">
+                    <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Listing Description
+                    </h3>
+                    <div id="descContainer" class="w-full h-64 bg-slate-950 rounded-lg p-4 text-sm text-slate-300 font-mono whitespace-pre-wrap overflow-y-auto border border-slate-800/50">
+                        <span class="text-slate-600 opacity-50">Description content will appear here after analysis...</span>
+                    </div>
+                </div>
+
+            </section>
         </div>
 
-        <div id="logContainer" class="flex-1 overflow-y-auto font-mono text-xs space-y-4 pr-2 scrollbar-hide pb-4">
-            <div class="text-slate-700 text-center mt-32 flex flex-col items-center" id="emptyLog">
-                <span class="text-2xl mb-2 opacity-20">⌨️</span>
-                <span>System Ready</span>
-            </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div id="progressContainer" class="mt-6 shrink-0 opacity-40 grayscale transition-all duration-500">
-            <div class="flex justify-between text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-semibold">
-                <span id="progressStep">Idle</span>
-                <span id="progressPercent">0%</span>
-            </div>
-            <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-                <div id="progressBar" class="h-full bg-gradient-to-r from-blue-600 to-purple-600 w-0 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+        <!-- Overlay Loading State -->
+        <div id="loadingOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div class="text-center">
+                <div class="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <h3 class="text-xl font-bold text-white">Processing...</h3>
+                <p class="text-slate-400 text-sm mt-2" id="loadingText">Initializing AI models</p>
             </div>
         </div>
     </div>
 
+    <!-- CONFIG & SCRIPTS -->
     <script>
-        // --- Configuration & State ---
-        const CONSTANTS = {
-            SCOPES: 'https://www.googleapis.com/auth/drive.file',
-            GEMINI_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-            RATIOS: [
-                { name: '2-3_Ratio', ratio: 2/3 },
-                { name: '3-4_Ratio', ratio: 3/4 },
-                { name: '4-5_Ratio', ratio: 4/5 },
-                { name: 'ISO', ratio: 1/1.414 },
-                { name: '11-14_Ratio', ratio: 11/14 },
-                { name: 'Square', ratio: 1 }
+        // --- CONSTANTS & CONFIG ---
+        const CONFIG = {
+            apiKey: "AIzaSyBy7e3wOwLR4CmCEarpaE9ZEO8oZvtork0",
+            clientId: "594148516220-5u0inttseubu4i4gat5aa27b2t80rn3g.apps.googleusercontent.com",
+            scopes: "https://www.googleapis.com/auth/drive.file",
+            ratios: [
+                { name: '2-3_Ratio', ratio: 2/3, label: '2:3' },
+                { name: '3-4_Ratio', ratio: 3/4, label: '3:4' },
+                { name: '4-5_Ratio', ratio: 4/5, label: '4:5' },
+                { name: 'ISO', ratio: 1/1.414, label: 'ISO' },
+                { name: '11-14_Ratio', ratio: 11/14, label: '11:14' },
+                { name: 'Square', ratio: 1, label: '1:1' }
             ]
         };
 
-        let config = { apiKey: null, clientId: null };
-        
-        let state = {
+        const STATE = {
             file: null,
+            resizedBlobs: [], // { name, blob }
+            seoData: null,    // { titles, description, tags, fullText }
+            finalZip: null,
+            finalDoc: null,
             tokenClient: null,
-            accessToken: null,
-            isProcessing: false,
-            gapiLoaded: false,
-            gisLoaded: false
+            accessToken: null
         };
 
-        // --- DOM Elements ---
+        // --- DOM ELEMENTS ---
         const els = {
-            // Modal
-            modal: document.getElementById('setupModal'),
-            credForm: document.getElementById('credForm'),
-            inputClientId: document.getElementById('inputClientId'),
-            inputApiKey: document.getElementById('inputApiKey'),
-            settingsBtn: document.getElementById('settingsBtn'),
-            
-            // Main UI
             fileInput: document.getElementById('fileInput'),
             dropZone: document.getElementById('dropZone'),
-            emptyState: document.getElementById('emptyState'),
-            fileState: document.getElementById('fileState'),
-            previewImg: document.getElementById('previewImg'),
+            uploadPlaceholder: document.getElementById('uploadPlaceholder'),
+            previewThumb: document.getElementById('previewThumb'),
             fileName: document.getElementById('fileName'),
-            actionBtn: document.getElementById('actionBtn'),
-            btnText: document.getElementById('btnText'),
-            btnIcon: document.getElementById('btnIcon'),
-            
-            // Log & Status
+            fileInfo: document.getElementById('fileInfo'),
+            analyzeBtn: document.getElementById('analyzeBtn'),
+            saveBtn: document.getElementById('saveBtn'),
             logContainer: document.getElementById('logContainer'),
-            emptyLog: document.getElementById('emptyLog'),
-            statusIndicator: document.getElementById('statusIndicator'),
-            progressBar: document.getElementById('progressBar'),
-            progressStep: document.getElementById('progressStep'),
-            progressPercent: document.getElementById('progressPercent'),
-            authStatus: document.getElementById('authStatus'),
-            authIndicator: document.getElementById('authIndicator'),
-            warning: document.getElementById('protocol-warning')
+            ratioGrid: document.getElementById('ratioGrid'),
+            titlesContainer: document.getElementById('titlesContainer'),
+            tagsContainer: document.getElementById('tagsContainer'),
+            descContainer: document.getElementById('descContainer'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            loadingText: document.getElementById('loadingText'),
+            statRatios: document.getElementById('statRatios'),
+            statTags: document.getElementById('statTags'),
+            authStatus: document.getElementById('authStatus')
         };
 
-        // --- Initialization Flow ---
+        // --- INITIALIZATION ---
         window.onload = () => {
-            if (window.location.protocol === 'file:') {
-                els.warning.classList.remove('hidden');
-                addLog('CRITICAL: Running via file:// protocol. Auth will fail.', 'error');
-            }
-            loadCredentials();
+            log("System initialized.");
+            initGoogleIdentity();
         };
 
-        function loadCredentials() {
-            const stored = localStorage.getItem('privathinker_creds');
-            if (stored) {
-                try {
-                    const creds = JSON.parse(stored);
-                    if (creds.apiKey && creds.clientId) {
-                        config.apiKey = creds.apiKey;
-                        config.clientId = creds.clientId;
-                        addLog('Credentials loaded from vault.', 'info');
-                        checkGoogleLibs();
-                        return;
-                    }
-                } catch (e) {
-                    console.error('Credential parse error', e);
-                }
-            }
-            // If no valid creds, show modal
-            showSetupModal();
-        }
-
-        function showSetupModal() {
-            els.modal.classList.remove('hidden');
-        }
-
-        els.credForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const clientId = els.inputClientId.value.trim();
-            const apiKey = els.inputApiKey.value.trim();
-
-            if (clientId && apiKey) {
-                const creds = { clientId, apiKey };
-                localStorage.setItem('privathinker_creds', JSON.stringify(creds));
-                config.apiKey = apiKey;
-                config.clientId = clientId;
-                
-                els.modal.classList.add('hidden');
-                addLog('Credentials saved. Initializing systems...', 'success');
-                checkGoogleLibs();
-            }
-        });
-
-        els.settingsBtn.addEventListener('click', () => {
-            if (confirm('Clear stored credentials and reload? This will require you to re-enter your keys.')) {
-                localStorage.removeItem('privathinker_creds');
-                window.location.reload();
-            }
-        });
-
-        // --- Google Integrations ---
-        function checkGoogleLibs() {
-            if (window.gapi) handleGapiLoad();
-            if (window.google) handleGisLoad();
-        }
-
-        function handleGapiLoad() {
-            gapi.load('client', async () => {
-                try {
-                    await gapi.client.init({
-                        apiKey: config.apiKey,
-                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                    });
-                    state.gapiLoaded = true;
-                    addLog('Google API Client initialized.', 'info');
-                    updateAuthStatus();
-                } catch (error) {
-                    addLog(`GAPI Error: ${error.result?.error?.message || error}`, 'error');
-                    if(error.result?.error?.code === 400) {
-                         alert("Invalid API Key. Please check settings.");
-                         localStorage.removeItem('privathinker_creds');
-                         window.location.reload();
-                    }
-                }
-            });
-        }
-
-        function handleGisLoad() {
+        function initGoogleIdentity() {
             try {
-                state.tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: config.clientId,
-                    scope: CONSTANTS.SCOPES,
+                STATE.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CONFIG.clientId,
+                    scope: CONFIG.scopes,
                     callback: (resp) => {
                         if (resp.error) {
-                            addLog(`Auth Error: ${resp.error}`, 'error');
+                            log("Auth Error: " + resp.error, "error");
                             return;
                         }
-                        state.accessToken = resp.access_token;
-                        addLog('OAuth Token acquired successfully.', 'success');
-                        updateAuthStatus();
-                        startWorkflow(); // Continue automatic workflow after auth
+                        STATE.accessToken = resp.access_token;
+                        log("Authenticated with Google.", "success");
+                        els.authStatus.classList.remove('bg-slate-700', 'bg-red-500');
+                        els.authStatus.classList.add('bg-emerald-500', 'shadow-[0_0_8px_rgba(16,185,129,0.8)]');
+                        // Proceed to save if this was triggered during save flow
+                        performSave();
                     },
                 });
-                state.gisLoaded = true;
-                addLog('Identity Service ready.', 'info');
-                updateAuthStatus();
-            } catch (error) {
-                 addLog(`GIS Error: ${error}`, 'error');
-                 alert("Invalid Client ID or GIS Config. Please check settings.");
-                 localStorage.removeItem('privathinker_creds');
-                 window.location.reload();
+                log("Google Identity Service ready.");
+            } catch (e) {
+                log("Failed to init GIS: " + e.message, "error");
             }
         }
 
-        function updateAuthStatus() {
-            if (state.gisLoaded && state.gapiLoaded) {
-                if(state.accessToken) {
-                    els.authStatus.innerText = 'Authenticated';
-                    els.authStatus.className = 'text-[10px] uppercase tracking-widest text-emerald-400 font-bold';
-                    els.authIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
-                } else {
-                    els.authStatus.innerText = 'Ready to Sign In';
-                    els.authStatus.className = 'text-[10px] uppercase tracking-widest text-blue-400 font-semibold';
-                    els.authIndicator.className = 'w-2 h-2 rounded-full bg-blue-500';
-                }
-            }
-        }
-
-        // --- Workflow Handlers ---
-        els.fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                handleFileSelect(e.target.files[0]);
-            }
-        });
-
-        els.actionBtn.addEventListener('click', () => {
-            if (state.isProcessing) return;
+        // --- EVENT LISTENERS ---
+        els.fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+        
+        els.analyzeBtn.addEventListener('click', async () => {
+            if (!STATE.file) return;
+            setLoading(true, "Analyzing Image & Generating Content...");
             
-            if (!state.accessToken) {
-                addLog('Initiating Google Sign-In...', 'process');
-                // Trigger Popup
-                state.tokenClient.requestAccessToken({ prompt: '' });
-            } else {
-                startWorkflow();
-            }
-        });
-
-        function handleFileSelect(file) {
-            state.file = file;
-            
-            els.emptyState.classList.add('hidden');
-            els.fileState.classList.remove('hidden');
-            els.fileState.classList.add('flex');
-            els.fileName.textContent = file.name;
-            els.previewImg.src = URL.createObjectURL(file);
-            
-            els.actionBtn.disabled = false;
-            els.actionBtn.className = "w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wide shadow-lg transition-all duration-300 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white hover:shadow-blue-500/25 cursor-pointer border border-blue-400/20";
-            els.btnText.innerText = "Analyze & Save to Drive";
-            
-            // Clear log visually but keep history in memory if needed (here we clear)
-            els.logContainer.innerHTML = '';
-            els.emptyLog.style.display = 'flex';
-            els.logContainer.appendChild(els.emptyLog);
-            addLog(`Asset staged: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`, 'info');
-        }
-
-        async function startWorkflow() {
-            if (!state.file) return;
-
-            setProcessing(true);
             try {
-                // Step 1: Resize
-                updateProgress('Processing Assets', 15);
-                addLog('Generating multi-ratio variants...', 'process');
-                const zipBlob = await generateImageZip(state.file);
-                addLog(`ZIP archive created (${(zipBlob.size/1024/1024).toFixed(2)}MB).`, 'success');
-
-                // Step 2: AI
-                updateProgress('Consulting AI', 45);
-                addLog('Sending to Gemini for SEO analysis...', 'process');
-                const seoBlob = await generateSEO(state.file);
-                addLog('SEO listings compiled.', 'success');
-
-                // Step 3: Drive
-                updateProgress('Cloud Archival', 75);
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const folderName = `Privathinker - ${timestamp}`;
-                addLog(`Creating Drive folder: ${folderName}`, 'process');
-                const folderId = await createDriveFolder(folderName);
+                // 1. Resize Images
+                log("Starting image processing...");
+                await processImages(STATE.file);
                 
-                // Step 4: Upload
-                updateProgress('Uploading', 90);
-                addLog('Transmitting data to Google Drive...', 'process');
-                await Promise.all([
-                    uploadFile(zipBlob, 'Resized_Images.zip', folderId, 'application/zip'),
-                    uploadFile(seoBlob, 'Listing_SEO.doc', folderId, 'application/msword')
-                ]);
-
-                updateProgress('Completed', 100);
-                addLog('All operations successful. Files archived.', 'success');
-                setProcessing(false);
+                // 2. Call AI
+                log("Querying Gemini Vision API...");
+                await generateAIContent(STATE.file);
                 
-                // Reset button state slightly to indicate success but keep enabled
-                els.btnText.innerText = "Processing Complete";
-                setTimeout(() => {
-                    if(!state.isProcessing) els.btnText.innerText = "Analyze & Save Another";
-                }, 3000);
-
+                // 3. Prepare Files
+                log("Packaging assets (ZIP & Doc)...");
+                await prepareDownloads();
+                
+                // 4. Enable Save
+                els.saveBtn.disabled = false;
+                log("Analysis complete. Ready to save.", "success");
+                
             } catch (error) {
+                log("Analysis Failed: " + error.message, "error");
                 console.error(error);
-                addLog(`FAILURE: ${error.message}`, 'error');
-                setProcessing(false);
+            } finally {
+                setLoading(false);
             }
+        });
+
+        els.saveBtn.addEventListener('click', () => {
+            if (!STATE.accessToken) {
+                log("Requesting Google Authentication...");
+                STATE.tokenClient.requestAccessToken({ prompt: '' });
+            } else {
+                performSave();
+            }
+        });
+
+        // --- CORE LOGIC: FILE HANDLING ---
+        function handleFile(file) {
+            if (!file) return;
+            STATE.file = file;
+            
+            // UI Update
+            const url = URL.createObjectURL(file);
+            els.previewThumb.src = url;
+            els.previewThumb.classList.remove('hidden');
+            els.uploadPlaceholder.classList.add('hidden');
+            els.fileInfo.classList.remove('hidden');
+            els.fileName.textContent = file.name;
+            els.dropZone.classList.add('border-indigo-500', 'bg-slate-800/50');
+            
+            els.analyzeBtn.disabled = false;
+            els.saveBtn.disabled = true; // Reset save flow
+            
+            // Clear Dashboard
+            clearDashboard();
+            log(`File loaded: ${file.name}`);
         }
 
-        // --- Logic: Image Processor ---
-        async function generateImageZip(file) {
-            const zip = new JSZip();
-            const folder = zip.folder("Resized_Images");
+        // --- CORE LOGIC: STEP 1 - ANALYZE ---
+        async function processImages(file) {
+            STATE.resizedBlobs = [];
+            els.ratioGrid.innerHTML = ''; // Clear grid
             
             const bitmap = await createImageBitmap(file);
             const { width: srcW, height: srcH } = bitmap;
 
-            for (const r of CONSTANTS.RATIOS) {
-                let tgtW = srcW;
-                let tgtH = srcH;
-                
-                // Crop logic: Cover
+            for (const r of CONFIG.ratios) {
+                // Calculate dimensions (Cover fit)
+                let tgtW = srcW, tgtH = srcH;
                 if (srcW / srcH > r.ratio) {
                     tgtW = srcH * r.ratio;
                 } else {
@@ -446,30 +326,31 @@
                 canvas.height = tgtH;
                 const ctx = canvas.getContext('2d');
                 
+                // Center Crop
                 const ox = (srcW - tgtW) / 2;
                 const oy = (srcH - tgtH) / 2;
                 
                 ctx.drawImage(bitmap, ox, oy, tgtW, tgtH, 0, 0, tgtW, tgtH);
                 
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-                folder.file(`${r.name}.jpg`, blob);
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+                STATE.resizedBlobs.push({ name: `${r.name}.jpg`, blob });
+                
+                // Render Thumbnail
+                renderThumbnail(canvas.toDataURL(), r.label);
             }
-
-            return zip.generateAsync({ type: "blob" });
+            els.statRatios.textContent = `${CONFIG.ratios.length} Ratios`;
         }
 
-        // --- Logic: Gemini AI ---
-        async function generateSEO(file) {
-            // Downscale for API efficiency
+        async function generateAIContent(file) {
+            // Downscale for API
             const bitmap = await createImageBitmap(file);
             const scale = 800 / Math.max(bitmap.width, bitmap.height);
             const canvas = document.createElement('canvas');
             canvas.width = bitmap.width * scale;
             canvas.height = bitmap.height * scale;
             canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-            
             const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-            
+
             const prompt = `Analyze the uploaded product image and generate a complete Etsy Listing Package: Titles, Description, and Tags.
 
 Store: Privathinker
@@ -489,9 +370,9 @@ STEPS:
 3. DESCRIPTION: Hook -> Warning (Digital Product) -> Sizes -> Printing Tips -> CTA.
 4. TAGS: 13 comma-separated keywords.
 
-FORMAT: Markdown.`;
+FORMAT: Markdown. Return exactly these headers: TITLES, DESCRIPTION, TAGS.`;
 
-            const response = await fetch(`${CONSTANTS.GEMINI_URL}?key=${config.apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -504,27 +385,111 @@ FORMAT: Markdown.`;
                 })
             });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(`Gemini API: ${err.error?.message || response.statusText}`);
-            }
-            
+            if (!response.ok) throw new Error("Gemini API Error: " + response.status);
             const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            const text = data.candidates[0].content.parts[0].text;
             
-            if (!text) throw new Error("Gemini returned empty response.");
-            
-            return new Blob([text], { type: 'application/msword' });
+            parseAndRenderSEO(text);
         }
 
-        // --- Logic: Google Drive ---
+        function parseAndRenderSEO(text) {
+            STATE.seoData = { fullText: text, titles: [], description: "", tags: [] };
+            
+            // Simple Parsing Strategy
+            const cleanText = text.replace(/\*\*/g, ''); // Remove bold markers for cleaner parsing
+            
+            // Extract via simple splitting or regex
+            // Note: The prompt asks for 1. VISUAL..., 2. TITLES, 3. DESCRIPTION, 4. TAGS
+            
+            const titlesMatch = cleanText.match(/TITLES:?([\s\S]*?)(?:3\.|DESCRIPTION)/i);
+            const descMatch = cleanText.match(/DESCRIPTION:?([\s\S]*?)(?:4\.|TAGS)/i);
+            const tagsMatch = cleanText.match(/TAGS:?([\s\S]*)/i);
+
+            // Render Titles
+            els.titlesContainer.innerHTML = '';
+            if (titlesMatch) {
+                const lines = titlesMatch[1].trim().split('\n').filter(l => l.trim().length > 3);
+                STATE.seoData.titles = lines;
+                lines.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-800/50 p-3 rounded text-sm text-slate-300 border border-slate-700/50 animate-fade-in";
+                    div.textContent = t.replace(/^\d+\.\s*/, '').replace(/^- /, '');
+                    els.titlesContainer.appendChild(div);
+                });
+            }
+
+            // Render Description
+            if (descMatch) {
+                STATE.seoData.description = descMatch[1].trim();
+                els.descContainer.textContent = STATE.seoData.description;
+            }
+
+            // Render Tags
+            els.tagsContainer.innerHTML = '';
+            if (tagsMatch) {
+                const rawTags = tagsMatch[1].split(/,|\n/).map(t => t.trim()).filter(t => t.length > 2);
+                STATE.seoData.tags = rawTags;
+                els.statTags.textContent = `${rawTags.length} Tags`;
+                rawTags.forEach(t => {
+                    const span = document.createElement('span');
+                    span.className = "px-3 py-1 bg-indigo-900/30 text-indigo-300 border border-indigo-500/30 rounded-full text-xs animate-fade-in";
+                    span.textContent = t;
+                    els.tagsContainer.appendChild(span);
+                });
+            }
+        }
+
+        async function prepareDownloads() {
+            // ZIP
+            const zip = new JSZip();
+            const imgFolder = zip.folder("Resized_Images");
+            STATE.resizedBlobs.forEach(item => imgFolder.file(item.name, item.blob));
+            STATE.finalZip = await zip.generateAsync({ type: "blob" });
+
+            // Doc
+            if (STATE.seoData && STATE.seoData.fullText) {
+                STATE.finalDoc = new Blob([STATE.seoData.fullText], { type: 'application/msword' });
+            }
+        }
+
+        // --- CORE LOGIC: STEP 2 - SAVE ---
+        async function performSave() {
+            setLoading(true, "Creating Folder & Uploading...");
+            try {
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const folderName = `Privathinker - ${timestamp}`;
+                
+                // 1. Create Folder
+                log(`Creating Folder: ${folderName}`);
+                const folderId = await createDriveFolder(folderName);
+                
+                // 2. Upload Files
+                log("Uploading ZIP archive...");
+                await uploadFile(STATE.finalZip, 'Resized_Images.zip', folderId, 'application/zip');
+                
+                log("Uploading SEO Document...");
+                await uploadFile(STATE.finalDoc, 'Listing_SEO.doc', folderId, 'application/msword');
+                
+                log("Cloud Save Complete!", "success");
+                alert("Files successfully saved to Google Drive!");
+                
+            } catch (error) {
+                log("Save Failed: " + error.message, "error");
+                if (error.status === 401 || error.message.includes("401")) {
+                     log("Auth token expired. Try clicking Save again.", "error");
+                     STATE.accessToken = null; // Reset
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // --- GOOGLE DRIVE API UTILS ---
         async function createDriveFolder(name) {
-            // Using fetch directly as fallback if GAPI wrapper has issues, but GAPI client is cleaner if auth works.
-            // Let's stick to fetch for raw control over headers with the valid accessToken
             const res = await fetch('https://www.googleapis.com/drive/v3/files', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${state.accessToken}`,
+                    'Authorization': `Bearer ${STATE.accessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -532,90 +497,75 @@ FORMAT: Markdown.`;
                     mimeType: 'application/vnd.google-apps.folder'
                 })
             });
-            
-            if(!res.ok) {
-                 const err = await res.json();
-                 throw new Error(`Drive Create Error: ${err.error?.message || res.status}`);
-            }
+            if (!res.ok) throw new Error("Folder creation failed");
             const data = await res.json();
             return data.id;
         }
 
         async function uploadFile(blob, name, folderId, mimeType) {
-            const metadata = {
-                name: name,
-                parents: [folderId]
-            };
+            // Metadata part
+            const metadata = { name: name, parents: [folderId] };
             
+            // Multipart body construction
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
             form.append('file', blob);
 
             const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${state.accessToken}`
-                },
+                headers: { 'Authorization': `Bearer ${STATE.accessToken}` },
                 body: form
             });
-
-            if (!res.ok) throw new Error(`Upload Failed: ${name}`);
+            
+            if (!res.ok) throw new Error("Upload failed for " + name);
         }
 
-        // --- UI Utilities ---
-        function addLog(msg, type) {
+        // --- UI HELPERS ---
+        function renderThumbnail(src, label) {
             const div = document.createElement('div');
-            div.className = "flex gap-3 py-1 border-l-2 border-transparent pl-2 hover:bg-white/5 transition-colors group";
-            
-            els.emptyLog.style.display = 'none';
-            
-            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit'});
-            
-            let colorClass = 'text-slate-400';
-            let icon = '•';
-            let borderClass = 'border-slate-800';
-
-            if (type === 'success') { colorClass = 'text-emerald-400'; icon = '✓'; borderClass = 'border-emerald-500/50'; }
-            if (type === 'error') { colorClass = 'text-red-400 font-semibold'; icon = '✕'; borderClass = 'border-red-500'; }
-            if (type === 'process') { colorClass = 'text-blue-300'; icon = '⚡'; borderClass = 'border-blue-500/50'; }
-            if (type === 'info') { colorClass = 'text-slate-300'; icon = 'i'; }
-
-            div.classList.add(borderClass.split(' ')[0]); // simplistic add
-
+            div.className = "relative rounded-lg overflow-hidden border border-slate-700 aspect-square group animate-fade-in bg-slate-900";
             div.innerHTML = `
-                <span class="text-slate-600 text-[10px] mt-0.5 font-mono opacity-70">${time}</span>
-                <div class="${colorClass} text-xs break-all">${msg}</div>
+                <img src="${src}" class="w-full h-full object-contain p-2" />
+                <div class="absolute bottom-0 inset-x-0 bg-slate-900/80 text-center py-1 text-[10px] text-slate-300 font-mono border-t border-slate-800">
+                    ${label}
+                </div>
             `;
+            els.ratioGrid.appendChild(div);
+        }
+
+        function clearDashboard() {
+            els.ratioGrid.innerHTML = `<div class="col-span-6 text-center text-slate-600 py-12 italic">Analysis pending...</div>`;
+            els.titlesContainer.innerHTML = '<div class="text-slate-600 text-xs">Pending analysis...</div>';
+            els.tagsContainer.innerHTML = '<span class="text-slate-600 text-xs">Pending...</span>';
+            els.descContainer.innerHTML = '<span class="text-slate-600 opacity-50">Content will appear here...</span>';
+            els.statRatios.textContent = "0 Ratios";
+            els.statTags.textContent = "0 Tags";
+        }
+
+        function log(msg, type="info") {
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString([], { hour12: false });
+            let color = "text-slate-400";
+            if (type === "error") color = "text-red-400";
+            if (type === "success") color = "text-emerald-400";
+            
+            div.innerHTML = `<span class="opacity-50 mr-2">[${time}]</span> <span class="${color}">${msg}</span>`;
+            
+            // Clean initial state
+            if (els.logContainer.children[0]?.textContent.includes("Waiting")) {
+                els.logContainer.innerHTML = '';
+            }
             
             els.logContainer.appendChild(div);
-            div.scrollIntoView({ behavior: 'smooth' });
+            els.logContainer.scrollTop = els.logContainer.scrollHeight;
         }
 
-        function updateProgress(step, percent) {
-            els.progressStep.innerText = step;
-            els.progressPercent.innerText = `${percent}%`;
-            els.progressBar.style.width = `${percent}%`;
-        }
-
-        function setProcessing(isProcessing) {
-            state.isProcessing = isProcessing;
-            
-            // UI States
-            els.progressContainer.style.opacity = isProcessing ? '1' : '0.4';
-            els.progressContainer.style.filter = isProcessing ? 'none' : 'grayscale(100%)';
-            
-            if (isProcessing) {
-                els.actionBtn.disabled = true;
-                els.btnText.innerText = "Processing...";
-                els.actionBtn.classList.remove('from-blue-600', 'to-blue-500');
-                els.actionBtn.classList.add('bg-slate-800', 'text-slate-400');
-                els.btnIcon.innerHTML = `<svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+        function setLoading(isLoading, text) {
+            if (isLoading) {
+                els.loadingOverlay.classList.remove('hidden');
+                els.loadingText.textContent = text;
             } else {
-                els.actionBtn.disabled = false;
-                els.actionBtn.classList.add('from-blue-600', 'to-blue-500');
-                els.actionBtn.classList.remove('bg-slate-800', 'text-slate-400');
-                els.btnText.innerText = "Analyze & Save to Drive";
-                els.btnIcon.innerText = "✨";
+                els.loadingOverlay.classList.add('hidden');
             }
         }
     </script>
