@@ -1,0 +1,5 @@
+{
+  "name": "Privathinker Operations Hub",
+  "description": "A cloud-integrated operations dashboard for resizing images, generating SEO content via Gemini, and saving assets directly to Google Drive.",
+  "requestFramePermissions": []
+}
